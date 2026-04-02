@@ -1,3 +1,5 @@
+<img width="100" height="100" alt="k2" src="https://github.com/user-attachments/assets/847a9d50-7843-4779-82fb-4d74eb7b2aed" />
+
 # Kairva.LD 
 
 A full-stack internship management platform built for **LD College of Engineering's Instrumentation & Control (IC) Branch** to streamline the entire internship allocation process — from posting opportunities to tracking applications and placements.
@@ -12,6 +14,11 @@ A full-stack internship management platform built for **LD College of Engineerin
 - **Auth** — Google Sign-In and Email/Password via Firebase Authentication
 - **Storage** — Resumes and profile pictures stored in Supabase Storage
 - **Placement Records** — Historical internship placement data and analytics
+
+## Screenshots
+<img width="2850" height="1465" alt="image" src="https://github.com/user-attachments/assets/883c49be-8cc1-482f-8ba5-797c67a35f09" />
+<img width="2861" height="1446" alt="image" src="https://github.com/user-attachments/assets/ff86c94e-ddae-4fa2-8a4d-9305e5a5c7ca" />
+
 
 ## Tech Stack
 
