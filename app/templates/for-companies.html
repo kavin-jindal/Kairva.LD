@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>For Companies - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .premium-hero {
+            position: relative;
+            padding: 12rem 0 10rem;
+            text-align: center;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+        }
+
+        .hero-visual {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 400px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+            filter: blur(80px);
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .marquee-container {
+            overflow: hidden;
+            padding: 3rem 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin: 4rem 0;
+        }
+
+        .marquee-content {
+            display: flex;
+            gap: 4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .partner-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            opacity: 0.6;
+            white-space: nowrap;
+        }
+
+        .pillar-card {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--card-border);
+            text-align: left;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pillar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-color);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .pillar-card:hover::before {
+            opacity: 0.03;
+        }
+
+        .pillar-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .step-line {
+            position: absolute;
+            left: 24px;
+            top: 48px;
+            bottom: -48px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary-color), transparent);
+            z-index: 0;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, #121212 0%, #080808 100%);
+            padding: 5rem;
+            border-radius: 2rem;
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+            margin-top: 6rem;
+        }
+
+        .cta-glow {
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: var(--primary-color);
+            filter: blur(100px);
+            opacity: 0.1;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar animate-slide-up">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="brand">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                <span class="text-primary">Kairva.LD</span>
+            </a>
+            <button class="nav-menu-btn" onclick="toggleMenu()">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="{{ url_for('about') }}" class="nav-link">About Us</a>
+                <a href="{{ url_for('explore_companies') }}" class="nav-link">Explore Companies</a>
+                <a href="{{ url_for('placement_records') }}" class="nav-link">Placement Records</a>
+                <a href="{{ url_for('index') }}" class="nav-link">For Students</a>
+                {% if user %}
+                {% if user.role == 'student' %}
+                <a href="{{url_for('student_dashboard')}}" class="btn btn-outline btn-sm">Dashboard</a>
+                {% elif user.role == 'company' %}
+                <a href="{{url_for('company_dashboard')}}" class="btn btn-outline btn-sm">Dashboard</a>
+                {% elif user.role == 'admin' %}
+                <a href="{{url_for('admin_dashboard')}}" class="btn btn-outline btn-sm">Admin</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn btn-primary btn-sm">Logout</a>
+                {% else %}
+                <a href="{{ url_for('company_login') }}" class="btn btn-outline btn-sm">Employer Login</a>
+                <a href="{{ url_for('company_register') }}" class="btn btn-primary btn-sm"
+                    style="box-shadow: var(--shadow-glow);">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <header class="premium-hero">
+        <div class="hero-visual"></div>
+        <div class="container animate-fade-in">
+            <h1 class="hero-title" style="font-size: 4.5rem; max-width: 900px; margin: 0 auto 1.5rem;">
+                Hire the Best <span
+                    style="background: linear-gradient(to right, #FFFFFF, var(--primary-color)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Technical
+                    Talent</span> from LDCE
+            </h1>
+            <p class="hero-subtitle" style="max-width: 700px; margin: 0 auto 2.5rem; font-size: 1.25rem;">
+                Connect with thousands of verified engineering students. Streamline your campus recruitment with our
+                unified internship platform.
+            </p>
+            <div class="flex justify-center gap-6 flex-wrap">
+                <a href="{{ url_for('company_register') }}" class="btn btn-primary"
+                    style="padding: 1.25rem 3rem; font-size: 1.1rem; box-shadow: var(--shadow-glow);">
+                    Start Hiring Now
+                </a>
+                <a href="{{ url_for('company_login') }}" class="btn btn-outline"
+                    style="padding: 1.25rem 3rem; font-size: 1.1rem; background: rgba(255,255,255,0.02);">
+                    Employer Portal
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Unified Talent Section -->
+
+    <section class="container" style="padding-bottom: 12rem;">
+        <div class="text-center" style="margin-bottom: 6rem;">
+            <h2 class="section-title" style="font-size: 3rem; margin-bottom: 1.5rem;">Why Companies Choose Kairva.LD
+            </h2>
+            <p class="text-muted" style="max-width: 650px; margin: 0 auto; font-size: 1.1rem;">Our platform is designed
+                to make campus
+                recruitment efficient, transparent, and high-quality.</p>
+        </div>
+
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2.5rem;">
+            <div class="pillar-card">
+                <div class="pillar-content">
+                    <div
+                        style="width: 64px; height: 64px; background: rgba(59, 130, 246, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: var(--primary-color); margin-bottom: 2rem;">
+                        <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Pre-Vetted Profiles</h3>
+                    <p class="text-muted">Every student profile is verified by the university. No ghosting, no fake
+                        resumes—just genuine talent with verified academic records.</p>
+                </div>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-content">
+                    <div
+                        style="width: 64px; height: 64px; background: rgba(59, 130, 246, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: var(--primary-color); margin-bottom: 2rem;">
+                        <i data-lucide="zap" style="width: 32px; height: 32px;"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Rapid Deployment</h3>
+                    <p class="text-muted">Post a role and get qualified applications within hours. Our smart filter
+                        system helps you shortlist candidates in seconds.</p>
+                </div>
+            </div>
+            <div class="pillar-card">
+                <div class="pillar-content">
+                    <div
+                        style="width: 64px; height: 64px; background: rgba(59, 130, 246, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: var(--primary-color); margin-bottom: 2rem;">
+                        <i data-lucide="bar-chart-3" style="width: 32px; height: 32px;"></i>
+                    </div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Data-Driven Hiring</h3>
+                    <p class="text-muted">Access deep analytics on student skill distributions and competitive
+                        benchmarks to make informed hiring decisions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: rgba(255,255,255,0.01); padding: 12rem 0;">
+        <div class="container">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="text-center mb-16">
+                    <h2 class="section-title" style="font-size: 3rem; line-height: 1.2; margin-bottom: 2rem;">Simple,
+                        Efficient <br><span class="text-primary">Recruiter Workflow</span></h2>
+                </div>
+
+                <div style="display: grid; gap: 4rem;">
+                    <div class="step-item">
+                        <div class="step-line"></div>
+                        <div class="step-number">01</div>
+                        <div>
+                            <h4 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Post Your Listing</h4>
+                            <p class="text-muted" style="font-size: 1.1rem;">Define your role, required skills, and
+                                stipend. Your listing goes live
+                                to thousands of active students instantly.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-line"></div>
+                        <div class="step-number">02</div>
+                        <div>
+                            <h4 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Review & Shortlist</h4>
+                            <p class="text-muted" style="font-size: 1.1rem;">Use our dashboard to review verified
+                                profiles. Compare candidates
+                                based on GitHub, CPI, and skill match.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-number">03</div>
+                        <div>
+                            <h4 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Finalize Selection</h4>
+                            <p class="text-muted" style="font-size: 1.1rem;">Update status directly on the platform.
+                                Students get instant
+                                notifications, and you build your talent pipeline.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="cta-box text-center">
+            <div class="cta-glow"></div>
+            <h2 style="font-size: 3rem; margin-bottom: 1.5rem; position: relative; z-index: 1;">Empower Your Engineering
+                Team</h2>
+            <p class="text-muted" style="max-width: 600px; margin: 0 auto 3rem; position: relative; z-index: 1;">
+                Join the growing network of industry partners hiring from the LDCE ecosystem today. Completely free for
+                all
+                registered companies.
+            </p>
+            <div style="position: relative; z-index: 1;">
+                <a href="{{ url_for('company_register') }}" class="btn btn-primary"
+                    style="padding: 1.5rem 4rem; font-size: 1.25rem;">
+                    Get Started in Minutes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 6rem 0 4rem; margin-top: 4rem; border-top: 1px solid var(--border-color);">
+        <div class="container text-center">
+            <div style="font-weight: 800; font-size: 1.5rem; margin-bottom: 0.5rem;">Kairva.<span
+                    class="text-primary">LD</span></div>
+            <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 2rem;">Built for LD College of Engineering
+            </p>
+            <div style="display: flex; justify-content: center; gap: 3rem; margin-bottom: 3rem;">
+                <a href="{{ url_for('about') }}" class="text-muted hover:text-white transition">About</a>
+                <a href="#" class="text-muted hover:text-white transition">Terms</a>
+                <a href="#" class="text-muted hover:text-white transition">Privacy</a>
+                <a href="#" class="text-muted hover:text-white transition">Support</a>
+            </div>
+            <p class="text-muted" style="font-size: 0.875rem;">&copy; 2026 Kairva Corp. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

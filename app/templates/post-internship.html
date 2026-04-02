@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Post New Internship - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Reusing styles from dashboard */
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body data-is-verified="{{ 'true' if user.is_verified else 'false' }}">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD <span
+                    style="font-size: 0.75rem; background: var(--primary-color); color: #FFFFFF; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Company</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('index') }}" class="sidebar-link">
+                    <i data-lucide="home"></i> Home
+                </a>
+                <a href="{{ url_for('company_dashboard') }}" class="sidebar-link">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </a>
+                <a href="{{ url_for('company_dashboard', section='applications') }}" class="sidebar-link">
+                    <i data-lucide="mail"></i> Applications
+                </a>
+                <a href="#" class="sidebar-link active">
+                    <i data-lucide="plus-circle"></i> Post Internship
+                </a>
+                <a href="{{ url_for('company_dashboard', section='profile') }}" class="sidebar-link">
+                    <i data-lucide="building-2"></i> Company Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header flex-col md:flex-row gap-4 items-start md:items-center">
+                <div class="flex items-center w-full">
+                    <button class="nav-menu-btn" onclick="toggleSidebar()"
+                        style="color: var(--text-main); margin-right: 1rem;">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div>
+                        <h1 style="font-size: 1.5rem; font-weight: 700;">Create New Opportunity</h1>
+                        <p class="text-muted">Fill in the details to post a new internship listing.</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('company_dashboard') }}"
+                    class="btn btn-outline w-full md:w-auto text-center">Cancel</a>
+            </div>
+
+            <div class="form-card animate-slide-up">
+                <form action="{{ url_for('post_internship') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label class="input-label">Internship Title</label>
+                            <input type="text" name="title" class="input-field"
+                                placeholder="e.g. Software Engineer Intern" required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Internship Mode</label>
+                            <select name="mode" class="input-field" required>
+                                <option value="Online">Online</option>
+                                <option value="On-Site">On-Site</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Location</label>
+                            <input type="text" name="location" class="input-field" placeholder="e.g. Remote or City"
+                                required>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Duration</label>
+                            <input type="text" name="duration" class="input-field" placeholder="e.g. 3 Months" required>
+                        </div>
+                    </div>
+
+                    <!-- New Stipend Field -->
+                    <div class="input-group">
+                        <label class="input-label">Monthly Stipend (₹)</label>
+                        <input type="number" name="stipend" class="input-field" placeholder="e.g. 10000" min="0"
+                            required>
+                        <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.25rem;">Enter 0 if unpaid.</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Skills Required</label>
+                        <textarea name="skills_required" class="input-field" placeholder="e.g. Python, React, SQL"
+                            rows="2" style="resize: none;" required></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Description</label>
+                        <textarea name="description" class="input-field" rows="6" style="resize: none;"
+                            placeholder="Detailed internship description..." required></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-4 mt-6">
+                        <a href="{{ url_for('company_dashboard') }}" class="btn btn-outline">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Publish Internship Post</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

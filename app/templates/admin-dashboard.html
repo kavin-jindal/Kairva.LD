@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Admin Dashboard - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 2rem auto;
+            padding: 2.5rem;
+            border: 1px solid var(--card-border);
+            width: 95%;
+            max-width: 800px;
+            border-radius: var(--radius);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .profile-item {
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.75rem;
+        }
+
+        .profile-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-value {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .edit-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.5rem;
+            border-radius: 4px;
+            width: 100%;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD <span
+                    style="font-size: 0.75rem; background: var(--primary-color); color: #FFFFFF; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Admin</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('index') }}" class="sidebar-link">
+                    <i data-lucide="home"></i> Home
+                </a>
+                <a href="#" class="sidebar-link active" onclick="showSection('companies')">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </a>
+                <a href="#" class="sidebar-link" onclick="showSection('companies')">
+                    <i data-lucide="building-2"></i> Companies
+                </a>
+                <a href="#" class="sidebar-link" onclick="showSection('students')">
+                    <i data-lucide="users"></i> Students
+                </a>
+                <a href="#" class="sidebar-link" onclick="showSection('internships')">
+                    <i data-lucide="briefcase"></i> Internships
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="flex items-center">
+                    <button class="nav-menu-btn" onclick="toggleSidebar()"
+                        style="color: var(--text-main); margin-right: 1rem;">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div>
+                        <h1 style="font-size: 1.5rem; font-weight: 700;">Admin Dashboard</h1>
+                        <p class="text-muted">Manage platform users and verifications.</p>
+                    </div>
+                </div>
+            </header>
+
+            <section class="mb-5">
+                <div class="flex gap-4 mb-4">
+                    <button onclick="showSection('companies')" id="btn-companies"
+                        class="btn btn-primary btn-sm">Companies</button>
+                    <button onclick="showSection('students')" id="btn-students"
+                        class="btn btn-outline btn-sm">Students</button>
+                    <button onclick="showSection('internships')" id="btn-internships"
+                        class="btn btn-outline btn-sm">Internships</button>
+                </div>
+
+                <!-- Companies Section -->
+                <div id="section-companies">
+                    <h2 class="section-title">Pending Verifications ({{ pending_companies|length }})</h2>
+                    <div class="card mb-4" style="padding: 0; overflow: hidden;">
+                        <div class="table-container">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead
+                                    style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                    <tr>
+                                        <th
+                                            style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                            Company Name</th>
+                                        <th
+                                            style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                            Email</th>
+                                        <th
+                                            style="text-align: right; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                            Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for company in pending_companies %}
+                                    <tr style="border-bottom: 1px solid var(--card-border);">
+                                        <td style="padding: 1rem; font-weight: 500; color: var(--text-main);">{{
+                                            company.name or
+                                            'Pending Profile' }}</td>
+                                        <td style="padding: 1rem; color: var(--text-muted);">{{ company.email }}</td>
+                                        <td
+                                            style="padding: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                            <button class="btn btn-outline btn-sm view-profile-btn"
+                                                data-profile="{{ company|tojson|forceescape }}">View Profile</button>
+                                            <button onclick="verifyCompany('{{ company.uid }}')"
+                                                class="btn btn-primary btn-sm">Verify</button>
+                                            <button onclick="deleteUser('{{ company.uid }}')"
+                                                class="btn btn-outline btn-sm"
+                                                style="color: var(--danger-color); border-color: var(--danger-color);">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="3"
+                                            style="padding: 2rem; text-align: center; color: var(--text-muted);">No
+                                            pending
+                                            company verifications.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h2 class="section-title">Verified Companies</h2>
+                        <div class="card" style="padding: 0; overflow: hidden;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead
+                                    style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                    <tr>
+                                        <th
+                                            style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                            Company Name</th>
+                                        <th
+                                            style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                            Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set verified_count = [0] %}
+                                    {% for company in all_companies %}
+                                    {% if company.is_verified %}
+                                    {% if verified_count.append(verified_count.pop() + 1) %}{% endif %}
+                                    <tr style="border-bottom: 1px solid var(--card-border);">
+                                        <td style="padding: 1rem; color: var(--text-main);">{{ company.name or 'Unnamed
+                                            Company' }}
+                                        </td>
+                                        <td
+                                            style="padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                                            <span class="status-badge status-active">Verified</span>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                <button class="btn btn-outline btn-sm view-profile-btn"
+                                                    data-profile="{{ company|tojson|forceescape }}">View/Edit</button>
+                                                <button onclick="unverifyCompany('{{ company.uid }}')"
+                                                    class="btn btn-outline btn-sm"
+                                                    style="color: var(--warning-color); border-color: var(--warning-color);">Unverify</button>
+                                                <button onclick="deleteUser('{{ company.uid }}')"
+                                                    class="btn btn-outline btn-sm"
+                                                    style="color: var(--danger-color); border-color: var(--danger-color);">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if verified_count[0] == 0 %}
+                                    <tr>
+                                        <td colspan="2"
+                                            style="padding: 2rem; text-align: center; color: var(--text-muted);">No
+                                            verified
+                                            companies.</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Section -->
+                <div id="section-students" style="display: none;">
+                    <h2 class="section-title">All Students</h2>
+                    <div class="card" style="padding: 0; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead
+                                style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                <tr>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                        Name</th>
+                                    <th
+                                        style="text-align: right; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                        Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set students_count = [0] %}
+                                {% for student in students %}
+                                {% if students_count.append(students_count.pop() + 1) %}{% endif %}
+                                <tr style="border-bottom: 1px solid var(--card-border);">
+                                    <td style="padding: 1rem; color: var(--text-main);">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div
+                                                style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.03); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                {% if student.profile_pic %}
+                                                <img src="{{ student.profile_pic }}" alt=""
+                                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                                {% else %}
+                                                <span style="font-size: 0.75rem; color: var(--primary-color);">{{
+                                                    student.name[0]|upper if student.name else '?' }}</span>
+                                                {% endif %}
+                                            </div>
+                                            {{ student.name or student.email }}
+                                        </div>
+                                    </td>
+                                    <td style="padding: 1rem; text-align: right;">
+                                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                            <button class="btn btn-outline btn-sm view-profile-btn"
+                                                data-profile="{{ student|tojson|forceescape }}">View/Edit</button>
+                                            <button onclick="deleteUser('{{ student.uid }}')"
+                                                class="btn btn-outline btn-sm"
+                                                style="color: var(--danger-color); border-color: var(--danger-color);">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if students_count[0] == 0 %}
+                                <tr>
+                                    <td colspan="2"
+                                        style="padding: 2rem; text-align: center; color: var(--text-muted);">No students
+                                        found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Internships Section -->
+                <div id="section-internships" style="display: none;">
+                    <h2 class="section-title">All Internships</h2>
+                    <div class="card mb-4" style="padding: 0; overflow: hidden;">
+                        <div class="table-container">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead
+                                    style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                    <tr>
+                                        <th
+                                            style="padding: 1rem; text-align: left; font-size: 0.875rem; color: var(--text-muted);">
+                                            Title</th>
+                                        <th
+                                            style="padding: 1rem; text-align: left; font-size: 0.875rem; color: var(--text-muted);">
+                                            Company</th>
+                                        <th
+                                            style="padding: 1rem; text-align: right; font-size: 0.875rem; color: var(--text-muted);">
+                                            Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for job in all_jobs %}
+                                    <tr style="border-bottom: 1px solid var(--card-border);">
+                                        <td style="padding: 1rem; color: var(--text-main);">{{ job.title }}</td>
+                                        <td style="padding: 1rem; color: var(--text-muted);">{{ job.company_name
+                                            }}
+                                        </td>
+                                        <td
+                                            style="padding: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;">
+                                            <button class="btn btn-outline btn-sm view-job-btn"
+                                                data-job="{{ job|tojson|forceescape }}">View</button>
+                                            <button onclick="deleteJob('{{ job.id }}')" class="btn btn-outline btn-sm"
+                                                style="color: var(--danger-color); border-color: var(--danger-color);">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="3"
+                                            style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                                            No
+                                            internships found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Profile View/Edit Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalTitle">User Profile</h2>
+                <div class="flex gap-2">
+                    <button id="editToggle" onclick="toggleEdit()" class="btn btn-outline btn-sm">Edit Data</button>
+                    <button onclick="closeProfileModal()" class="btn btn-outline btn-sm">Close</button>
+                </div>
+            </div>
+            <div id="profileHeader" class="flex items-center gap-4 mb-6 p-4"
+                style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; display: none;">
+                <div id="modalProfilePic"
+                    style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255, 255, 255, 0.03); overflow: hidden; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <!-- Pic injected here -->
+                </div>
+                <div>
+                    <h3 id="modalProfileName"
+                        style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px;"></h3>
+                    <p id="modalProfileEmail" style="font-size: 0.875rem; color: var(--text-muted);"></p>
+                </div>
+            </div>
+            <div id="profileDetails" class="profile-grid">
+                <!-- Details injected here -->
+            </div>
+            <div id="modalActions" class="mt-8 flex justify-end gap-3">
+                <!-- Actions injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProfile = null;
+        let isEditing = false;
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        function viewProfile(user) {
+            currentProfile = user;
+            isEditing = false;
+            renderProfile();
+            document.getElementById('profileModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        function renderProfile() {
+            const headerDiv = document.getElementById('profileHeader');
+            const picDiv = document.getElementById('modalProfilePic');
+            const nameH3 = document.getElementById('modalProfileName');
+            const emailP = document.getElementById('modalProfileEmail');
+            const detailsDiv = document.getElementById('profileDetails');
+
+            if (currentProfile.role === 'student' || currentProfile.role === 'company') {
+                headerDiv.style.display = 'flex';
+                nameH3.textContent = currentProfile.name || 'No Name Set';
+                emailP.textContent = currentProfile.email || 'No Email';
+
+                if (currentProfile.profile_pic) {
+                    const picSrc = currentProfile.profile_pic;
+                    picDiv.innerHTML = `<img src="${picSrc}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                } else {
+                    const initial = (currentProfile.name || '?')[0].toUpperCase();
+                    picDiv.innerHTML = `<span style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">${initial}</span>`;
+                }
+            } else {
+                headerDiv.style.display = 'none';
+            }
+
+            const actionsDiv = document.getElementById('modalActions');
+            const modalTitle = document.getElementById('modalTitle');
+            const editToggle = document.getElementById('editToggle');
+
+            modalTitle.innerText = currentProfile.role === 'company' ? 'Company Details' : (currentProfile.role === 'job' ? 'Internship Details' : 'Student Details');
+            detailsDiv.innerHTML = '';
+            actionsDiv.innerHTML = '';
+            editToggle.style.display = currentProfile.role === 'job' ? 'none' : 'block';
+            editToggle.innerText = isEditing ? 'Cancel Edit' : 'Edit Data';
+
+            const fields = currentProfile.role === 'company' ? [
+                { key: 'name', label: 'Company Name', value: currentProfile.name },
+                { key: 'email', label: 'Email', value: currentProfile.email, readonly: true },
+                { key: 'website', label: 'Website', value: currentProfile.website },
+                { key: 'year_founded', label: 'Year Founded', value: currentProfile.year_founded },
+                { key: 'industry', label: 'Industry', value: currentProfile.industry },
+                { key: 'location', label: 'Location', value: currentProfile.location },
+                { key: 'size', label: 'Size', value: currentProfile.size },
+                { key: 'company_description', label: 'Description', value: currentProfile.company_description, fullWidth: true, textarea: true },
+                { key: 'culture', label: 'Team Culture', value: currentProfile.culture, fullWidth: true, textarea: true }
+            ] : [
+                { key: 'name', label: 'Full Name', value: currentProfile.name },
+                { key: 'email', label: 'Email', value: currentProfile.email, readonly: true },
+                { key: 'enrollment_number', label: 'Enrollment', value: currentProfile.enrollment_number },
+                { key: 'branch', label: 'Branch', value: currentProfile.branch },
+                { key: 'admission_year', label: 'Admission Year', value: currentProfile.admission_year },
+                { key: 'passout_year', label: 'Passout Year', value: currentProfile.passout_year },
+                { key: 'study_type', label: 'Study Type', value: currentProfile.study_type },
+                { key: 'cpi', label: 'CPI', value: currentProfile.cpi },
+
+                { key: 'linkedin_url', label: 'LinkedIn', value: currentProfile.linkedin_url },
+                { key: 'github_url', label: 'GitHub', value: currentProfile.github_url },
+                { key: 'portfolio_url', label: 'Portfolio', value: currentProfile.portfolio_url },
+                { key: 'resume_path', label: 'Resume Path', value: currentProfile.resume_path, readonly: true },
+                { key: 'skills', label: 'Skills', value: currentProfile.skills, fullWidth: true, textarea: true }
+            ];
+
+            fields.forEach(f => {
+                const item = document.createElement('div');
+                item.className = f.fullWidth ? 'profile-item col-span-2' : 'profile-item';
+
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'profile-label';
+                labelDiv.textContent = f.label;
+
+                if (isEditing && !f.readonly) {
+                    if (f.textarea) {
+                        const input = document.createElement('textarea');
+                        input.className = 'edit-input';
+                        input.style.height = '100px';
+                        input.value = f.value || '';
+                        input.dataset.key = f.key;
+                        item.appendChild(labelDiv);
+                        item.appendChild(input);
+                    } else {
+                        const input = document.createElement('input');
+                        input.className = 'edit-input';
+                        input.value = f.value || '';
+                        input.dataset.key = f.key;
+                        item.appendChild(labelDiv);
+                        item.appendChild(input);
+                    }
+                } else {
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'profile-value';
+                    valueDiv.textContent = f.value || 'Not set';
+                    item.appendChild(labelDiv);
+                    item.appendChild(valueDiv);
+                }
+                detailsDiv.appendChild(item);
+            });
+
+            if (isEditing) {
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-primary';
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.onclick = saveProfile;
+                actionsDiv.appendChild(saveBtn);
+            } else {
+                if (!currentProfile.is_verified) {
+                    const verifyBtn = document.createElement('button');
+                    verifyBtn.className = 'btn btn-primary';
+                    verifyBtn.textContent = 'Verify Now';
+                    verifyBtn.onclick = () => {
+                        if (currentProfile.role === 'company') verifyCompany(currentProfile.uid);
+                        else verifyStudent(currentProfile.uid);
+                    };
+                    actionsDiv.appendChild(verifyBtn);
+                }
+            }
+        }
+
+        function toggleEdit() {
+            isEditing = !isEditing;
+            renderProfile();
+        }
+
+        async function saveProfile() {
+            const inputs = document.querySelectorAll('.edit-input');
+            const data = {};
+            inputs.forEach(input => {
+                data[input.dataset.key] = input.value;
+            });
+
+            try {
+                const response = await fetch(`/admin/edit-profile/${currentProfile.uid}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Profile updated successfully');
+                    location.reload();
+                } else {
+                    alert('Update failed: ' + result.error);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        function showSection(section) {
+            document.getElementById('section-companies').style.display = section === 'companies' ? 'block' : 'none';
+            document.getElementById('section-students').style.display = section === 'students' ? 'block' : 'none';
+            document.getElementById('section-internships').style.display = section === 'internships' ? 'block' : 'none';
+
+            document.getElementById('btn-companies').className = section === 'companies' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+            document.getElementById('btn-students').className = section === 'students' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+            document.getElementById('btn-internships').className = section === 'internships' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.textContent.trim().toLowerCase().includes(section)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        async function verifyCompany(uid) {
+            if (!confirm('Verify this company?')) return;
+            const res = await fetch(`/admin/verify-company/${uid}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function unverifyCompany(uid) {
+            if (!confirm('Unverify this company?')) return;
+            const res = await fetch(`/admin/unverify-company/${uid}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function verifyStudent(uid) {
+            if (!confirm('Verify this student?')) return;
+            const res = await fetch(`/admin/verify-student/${uid}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function unverifyStudent(uid) {
+            if (!confirm('Unverify this student?')) return;
+            const res = await fetch(`/admin/unverify-student/${uid}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function deleteUser(uid) {
+            if (!confirm('PERMANENTLY delete this account?')) return;
+            const res = await fetch(`/admin/delete-user/${uid}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function verifyJob(id) {
+            if (!confirm('Verify this internship listing?')) return;
+            const res = await fetch(`/admin/verify-job/${id}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function unverifyJob(id) {
+            if (!confirm('Unverify this internship listing?')) return;
+            const res = await fetch(`/admin/unverify-job/${id}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        async function deleteJob(id) {
+            if (!confirm('Permanently delete this internship listing?')) return;
+            const res = await fetch(`/admin/delete-job/${id}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+            if ((await res.json()).success) location.reload();
+        }
+
+        function viewJob(job) {
+            currentProfile = job;
+            currentProfile.role = 'job';
+            isEditing = false;
+            renderJobModal();
+            document.getElementById('profileModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        function renderJobModal() {
+            const detailsDiv = document.getElementById('profileDetails');
+            const actionsDiv = document.getElementById('modalActions');
+            const modalTitle = document.getElementById('modalTitle');
+            const editToggle = document.getElementById('editToggle');
+
+            modalTitle.innerText = 'Internship Details';
+            detailsDiv.innerHTML = '';
+            actionsDiv.innerHTML = '';
+            editToggle.style.display = 'none'; // Hide edit for jobs for now
+
+            const fields = [
+                { label: 'Title', value: currentProfile.title },
+                { label: 'Company', value: currentProfile.company_name },
+                { label: 'Location', value: currentProfile.location },
+                { label: 'Category', value: currentProfile.category },
+                { label: 'Duration', value: currentProfile.duration },
+                { label: 'Stipend', value: currentProfile.stipend },
+                { label: 'Skills Required', value: currentProfile.skills_required, fullWidth: true },
+                { label: 'Description', value: currentProfile.description, fullWidth: true, textarea: true }
+            ];
+
+            fields.forEach(f => {
+                const item = document.createElement('div');
+                item.className = f.fullWidth ? 'profile-item col-span-2' : 'profile-item';
+                item.innerHTML = `
+                    <div class="profile-label">${f.label}</div>
+                    <div class="profile-value">${f.value || 'Not set'}</div>
+                `;
+                detailsDiv.appendChild(item);
+            });
+
+            if (!currentProfile.is_verified) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-primary';
+                btn.textContent = 'Verify Internship';
+                btn.onclick = () => verifyJob(currentProfile.id);
+                actionsDiv.appendChild(btn);
+            }
+        }
+
+        document.querySelectorAll('.view-job-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewJob(JSON.parse(btn.getAttribute('data-job')));
+            });
+        });
+
+        document.querySelectorAll('.view-profile-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewProfile(JSON.parse(btn.getAttribute('data-profile')));
+            });
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

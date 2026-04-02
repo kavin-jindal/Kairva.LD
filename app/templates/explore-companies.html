@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Explore Companies - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .company-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .company-card {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    {% if user %}
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard', section='overview') }}" class="sidebar-link">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('explore_companies') }}" class="sidebar-link active">
+                    <i data-lucide="search"></i> Explore Companies
+                </a>
+                <a href="{{ url_for('placement_records') }}" class="sidebar-link">
+                    <i data-lucide="trending-up"></i> Placement Records
+                </a>
+                <a href="{{ url_for('student_dashboard', section='applications') }}" class="sidebar-link">
+                    <i data-lucide="briefcase"></i> My Applications
+                </a>
+                <a href="{{ url_for('student_dashboard', section='notifications') }}" class="sidebar-link">
+                    <i data-lucide="bell"></i> Notifications
+                    {% if unread_count is defined and unread_count > 0 %}
+                    <span class="badge"
+                        style="background:var(--danger-color); color:white; padding:2px 6px; border-radius:10px; font-size:0.7rem; margin-left:auto;">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile') }}" class="sidebar-link">
+                    <i data-lucide="user"></i> Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{url_for('logout')}}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="flex items-center justify-between" style="width: 100%;">
+                    <div class="flex items-center">
+                        <button class="nav-menu-btn" onclick="toggleSidebar()"
+                            style="color: var(--text-main); margin-right: 1rem;">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <div>
+                            <h1 style="font-size: 1.5rem; font-weight: 700;">Explore Companies</h1>
+                            <p class="text-muted">Discover top companies recruiting for internships</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-container" style="padding: 2rem;">
+                {% else %}
+                <nav class="navbar animate-slide-up">
+                    <div class="container nav-container">
+                        <a href="{{ url_for('index') }}" class="brand">
+                            <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                                style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                            <span class="text-primary">Kairva.LD</span>
+                        </a>
+                        <button class="nav-menu-btn" onclick="toggleMenu()">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <div class="nav-links" id="navLinks">
+                            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                            <a href="{{ url_for('explore_companies') }}" class="nav-link active">Explore Companies</a>
+                            <a href="{{ url_for('placement_records') }}" class="nav-link">Placement Records</a>
+                            <a href="{{ url_for('for_companies') }}" class="nav-link">For Companies</a>
+                            {% if user %}
+                            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline btn-sm">Dashboard</a>
+                            {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </nav>
+                <div class="container" style="padding-top: 8rem; padding-bottom: 4rem;">
+                    <div class="mb-12">
+                        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">Explore Companies</h1>
+                        <p class="text-muted">Discover top companies recruiting for internships</p>
+                    </div>
+                    {% endif %}
+                    <div class="search-wrapper" style="position: relative; margin-bottom: 3rem;">
+                        <div class="search-container"
+                            style="max-width: 100%; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 1rem; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.75rem; transition: all 0.3s ease; box-shadow: var(--shadow-sm);">
+                            <i data-lucide="search" style="opacity: 0.5;"></i>
+                            <input type="text" class="search-input"
+                                placeholder="Search by name, industry, or location..." id="companySearch"
+                                style="background: transparent; border: none; color: white; width: 100%; padding: 0.75rem 0; font-size: 1rem; outline: none;">
+                            <button id="clearSearch"
+                                style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.25rem; display: none;">✕</button>
+                        </div>
+                    </div>
+
+                    <section class="company-grid" id="companyGrid">
+                        {% for company in companies %}
+                        <a href="{{ url_for('company_profile_view', uid=company.uid) }}"
+                            class="card company-card hover-lift animate-slide-up"
+                            style="display: block; text-decoration: none;">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="company-logo" style="width: 56px; height: 56px; font-size: 1.5rem;">{{
+                                    (company.name or 'C')[0]|upper }}</div>
+                                <div>
+                                    <h3
+                                        style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+                                        {{
+                                        company.name or 'Unnamed Company' }}</h3>
+                                    <p class="text-muted" style="font-size: 0.9rem; font-weight: 500;">{{
+                                        company.industry
+                                        or
+                                        'Various Industries' }}</p>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-muted"
+                                    style="font-size: 0.95rem; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 4.2rem; line-height: 1.4;">
+                                    {{ company.company_description or 'No description available.' }}
+                                </p>
+                            </div>
+                            <div class="flex justify-between items-center pt-4"
+                                style="border-top: 1px solid var(--card-border);">
+                                <span
+                                    style="font-size: 0.875rem; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
+                                    {{ company.location or 'Multiple Locations' }}
+                                </span>
+                                <span class="text-primary"
+                                    style="font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                    View Profile <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+                                </span>
+                            </div>
+                        </a>
+                        {% else %}
+                        <div class="col-span-full card text-center"
+                            style="padding: 5rem 2rem; border-style: dashed; background: transparent;">
+                            <div style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                                <i data-lucide="building-2" style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">No companies yet</h3>
+                            <p class="text-muted">Check back soon as more companies join Kairva.LD.</p>
+                        </div>
+                        {% endfor %}
+
+                        <!-- No Results State (Hidden by default) -->
+                        <div id="noResults" class="col-span-full card text-center"
+                            style="padding: 5rem 2rem; border-style: dashed; background: transparent; display: none;">
+                            <div style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                                <i data-lucide="search-x" style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">No matches found</h3>
+                            <p class="text-muted">Try adjusting your search terms to find what you're looking for.</p>
+                        </div>
+                    </section>
+                </div>
+                {% if user %}
+        </main>
+    </div>
+    {% else %}
+    </div>
+    {% endif %}
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        // Search logic
+        const searchInput = document.getElementById('companySearch');
+        const clearBtn = document.getElementById('clearSearch');
+        const cards = document.querySelectorAll('.company-card');
+        const noResults = document.getElementById('noResults');
+        const searchContainer = searchInput?.parentElement;
+
+        searchInput?.addEventListener('focus', () => {
+            searchContainer.style.borderColor = 'var(--primary-color)';
+            searchContainer.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.1)';
+        });
+
+        searchInput?.addEventListener('blur', () => {
+            searchContainer.style.borderColor = 'var(--card-border)';
+            searchContainer.style.boxShadow = 'var(--shadow-sm)';
+        });
+
+        searchInput?.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            if (term.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+
+            cards.forEach(card => {
+                const name = card.querySelector('h3').textContent.toLowerCase();
+                const industry = card.querySelector('p').textContent.toLowerCase();
+                const location = card.querySelector('span').textContent.toLowerCase();
+                const description = card.querySelector('.mb-4 p').textContent.toLowerCase();
+
+                if (name.includes(term) || industry.includes(term) || location.includes(term) || description.includes(term)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && cards.length > 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            cards.forEach(card => card.style.display = 'block');
+            noResults.style.display = 'none';
+            searchInput.focus();
+        });
+
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

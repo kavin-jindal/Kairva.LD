@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+    <title>About Us - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .about-hero {
+            padding: 8rem 0 4rem;
+            text-align: center;
+            background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+        }
+
+        .about-section {
+            margin-bottom: 5rem;
+        }
+
+        .about-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .about-section p {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .institute-highlight {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 3rem;
+            border-radius: 2rem;
+            text-align: center;
+            margin: 4rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .institute-highlight::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, transparent 100%);
+            opacity: 0.03;
+        }
+
+        .ldce-logo-large {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 2rem;
+        }
+
+        /* Team Section */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .team-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-color);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .team-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+        }
+
+        .team-card:hover::after {
+            opacity: 0.05;
+        }
+
+        .team-member-img {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            object-fit: cover;
+            border: 4px solid var(--border-color);
+            transition: border-color 0.4s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .team-card:hover .team-member-img {
+            border-color: var(--primary-color);
+        }
+
+        .team-info {
+            position: relative;
+            z-index: 1;
+        }
+
+        .team-role {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .team-social {
+            display: flex;
+            justify-content: center;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-link:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar animate-slide-up">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="brand">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                <span class="text-primary">Kairva.LD</span>
+            </a>
+            <button class="nav-menu-btn" onclick="toggleMenu()">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                <a href="{{ url_for('explore_companies') }}" class="nav-link">Explore Companies</a>
+                <a href="{{url_for('placement_records')}}" class="nav-link">Placement Records</a>
+                <a href="{{ url_for('for_companies') }}" class="nav-link">For Companies</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="about-hero">
+        <div class="container animate-fade-in">
+            <h1 class="hero-title">Empowering the Next Generation of <span class="text-primary">Engineers</span></h1>
+            <p class="hero-subtitle">The bridge between academic excellence and industry innovation.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="about-content">
+            <section class="about-section animate-slide-up">
+                <h2>Our Mission</h2>
+                <p>
+                    Kairva.LD was founded with a single vision: to streamline the professional journey of students at LD
+                    College of Engineering. We believe that finding the right internship shouldn't be about endless
+                    scrolling, but about meaningful connections.
+                </p>
+                <p>
+                    Our platform provides a unified ecosystem where verified talent meets industry leaders, fostering
+                    growth, mentorship, and career-defining opportunities.
+                </p>
+            </section>
+
+            <div class="institute-highlight animate-slide-up">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    class="ldce-logo-large">
+                <h2 style="margin-bottom: 1rem;">Built for LDCE</h2>
+                <p class="text-muted" style="max-width: 600px; margin: 0 auto;">
+                    Kairva.LD is exclusively tailored for LD College of Engineering. It serves as the official digital
+                    bridge for student placements, ensuring that every record is verified and every opportunity is
+                    credible.
+                </p>
+            </div>
+
+            <section class="about-section animate-slide-up">
+                <h2 style="text-align: center;">The Team</h2>
+                <div class="team-grid">
+                    <!-- Kavin Jindal -->
+                    <div class="team-card">
+                        <img src="{{ url_for('static', filename='images/about/kavin.JPG') }}" alt="Kavin Jindal"
+                            class="team-member-img">
+                        <div class="team-info">
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Kavin Jindal</h3>
+                            <div class="team-social">
+                                <a href="https://github.com/kavin-jindal" class="social-link" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="github" size="20"></i></a>
+                                <a href="https://www.linkedin.com/in/kavin-jindal/" class="social-link" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="linkedin" size="20"></i></a>
+                                <a href="https://kavinjindal.bearblog.dev/" class="social-link" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="globe" size="20"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sarthakk Anjariya -->
+                    <div class="team-card">
+                        <img src="{{ url_for('static', filename='images/about/sarthakk.jpeg') }}"
+                            alt="Sarthakk Anjariya" class="team-member-img">
+                        <div class="team-info">
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Sarthakk Anjariya</h3>
+                            <div class="team-social">
+                                <a href="https://github.com/Solivagus17" class="social-link" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="github" size="20"></i></a>
+                                <a href="https://www.linkedin.com/in/sarthakk-anjariya-2983343b4/" class="social-link"
+                                    target="_blank" rel="noopener noreferrer"><i data-lucide="linkedin"
+                                        size="20"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer style="padding: 6rem 0 4rem; margin-top: 4rem; border-top: 1px solid var(--border-color);">
+        <div class="container text-center">
+            <div style="font-weight: 800; font-size: 1.5rem; margin-bottom: 0.5rem;">Kairva.<span
+                    class="text-primary">LD</span></div>
+            <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 2rem;">Built for LD College of Engineering
+            </p>
+            <div style="display: flex; justify-content: center; gap: 3rem; margin-bottom: 3rem;">
+                <a href="{{ url_for('about') }}" class="text-muted hover:text-white transition">About</a>
+                <a href="#" class="text-muted hover:text-white transition">Terms</a>
+                <a href="#" class="text-muted hover:text-white transition">Privacy</a>
+                <a href="#" class="text-muted hover:text-white transition">Support</a>
+            </div>
+            <p class="text-muted" style="font-size: 0.875rem;">&copy; 2026 Kairva Corp. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Company Login - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card card animate-slide-up" style="max-width: 420px;">
+            <div class="text-center mb-4">
+                <a href="{{ url_for('index') }}" class="brand justify-center" style="margin-bottom: 1rem;">
+                    <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                        style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                    <span class="text-primary">Kairva.LD</span> <span
+                        style="font-size: 0.8rem; background: var(--primary-color); color: #FFFFFF; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 600;">Company</span>
+                </a>
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">Employer Login</h2>
+                <p class="text-muted mt-2">Access your recruiter dashboard.</p>
+            </div>
+
+            <div id="auth-error" class="error-text mb-4" style="display: none;"></div>
+
+            <div class="desktop-only">
+                <form>
+                    <div class="input-group">
+                        <label class="input-label">Work Email Address</label>
+                        <input type="email" id="email" class="input-field" placeholder="hr@company.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="password" class="input-field" placeholder="••••••••" required>
+                    </div>
+                    <input type="hidden" id="roleSelect" value="company">
+
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="flex items-center gap-2 text-muted" style="font-size: 0.875rem;">
+                            <input type="checkbox"> Remember me
+                        </label>
+                        <a href="#" class="text-primary" style="font-size: 0.875rem; font-weight: 500;">Forgot
+                            password?</a>
+                    </div>
+
+                    <button type="button"
+                        onclick="loginWithEmail(document.getElementById('email').value, document.getElementById('password').value)"
+                        class="btn btn-primary w-full">Recruiter Sign in</button>
+
+                    <div class="text-center my-3 text-muted">OR</div>
+
+                    <button type="button" onclick="signInWithGoogle()"
+                        class="btn w-full flex items-center justify-center gap-2"
+                        style="background: rgba(255, 255, 255, 0.03); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"
+                            height="18" alt="Google">
+                        Sign in with Google
+                    </button>
+                </form>
+
+                <script type="module" src="{{ url_for('static', filename='js/auth.js') }}"></script>
+            </div>
+
+            <div class="mobile-only text-center py-6">
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i data-lucide="monitor-x" style="color: var(--danger-color);" size="32"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Mobile Access Restricted</h3>
+                <p class="text-muted" style="font-size: 0.95rem; line-height: 1.5;">Please use a desktop browser to sign
+                    in to the employer portal.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-outline mt-6 w-full">Back to Home</a>
+            </div>
+
+            <div class="text-center mt-4 text-muted desktop-only" style="font-size: 0.875rem;">
+                Looking to hire? <a href="{{ url_for('company_register') }}" class="text-primary"
+                    style="font-weight: 500;">Create a company account</a>
+            </div>
+
+            <div class="text-center mt-6 desktop-only">
+                <a href="{{ url_for('login') }}" class="text-muted" style="font-size: 0.875rem;">Are you a student?
+                    Login here</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

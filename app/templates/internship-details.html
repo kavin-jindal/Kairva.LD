@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+    <title>{{ job.title }} - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .details-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+
+        .job-header-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .job-header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+
+        .company-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .company-logo-large {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--card-border);
+            margin-top: 1.5rem;
+        }
+
+        .info-item .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-item .value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .content-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .content-section h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin: 0 0.5rem 0.5rem 0;
+        }
+
+        .company-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="details-container animate-slide-up">
+        <a href="javascript:history.back()" class="back-link">
+            <i data-lucide="arrow-left"></i> Back to Opportunities
+        </a>
+
+        <div class="job-header-card hover-lift">
+            <div class="company-meta">
+                <div class="company-logo-large">
+                    {{ job.company_name[0]|upper }}
+                </div>
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.25rem;">{{ job.title }}</h1>
+                    <a href="{{ url_for('company_profile_view', uid=job.company_uid) }}" class="text-primary"
+                        style="text-decoration: none; font-weight: 600;">
+                        {{ job.company_name }} <i data-lucide="external-link"
+                            style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="label">Location</div>
+                    <div class="value">{{ job.location }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Mode</div>
+                    <div class="value">{{ job.mode }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Stipend</div>
+                    <div class="value">
+                        {% if job.stipend and job.stipend != '0' %}
+                        ₹{{ job.stipend }} / month
+                        {% else %}
+                        Unpaid
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Duration</div>
+                    <div class="value">{{ job.duration or 'Not specified' }}</div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex items-center gap-4">
+                {% if user and user.role == 'student' %}
+                {% if applied %}
+                <button class="btn btn-primary" disabled
+                    style="background: #10B981; opacity: 1; border: none; cursor: default;">
+                    <i data-lucide="check-circle" style="width: 18px; height: 18px; margin-right: 8px;"></i>
+                    Application Submitted
+                </button>
+                <span class="text-muted" style="font-size: 0.875rem;">Status: <strong
+                        style="text-transform: capitalize; color: var(--primary-color);">{{
+                        application_status|replace('_', ' ') }}</strong></span>
+                {% else %}
+                <button data-job-id="{{ job.id }}" onclick="applyForInternship(this.dataset.jobId)"
+                    class="btn btn-primary px-8 py-3">
+                    Apply Now
+                </button>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="md:col-span-2">
+                <div class="content-section hover-lift">
+                    <h3><i data-lucide="file-text" class="text-primary"></i> Internship Description</h3>
+                    <div style="line-height: 1.7; color: var(--text-muted); white-space: pre-wrap;">
+                        {{ job.description }}
+                    </div>
+                </div>
+
+                <div class="content-section hover-lift">
+                    <h3><i data-lucide="zap" class="text-primary"></i> Required Skills</h3>
+                    <div class="flex flex-wrap">
+                        {% if job.skills_required %}
+                        {% for skill in job.skills_required.split(',') %}
+                        <span class="skill-tag">{{ skill.strip() }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-muted">No specific skills listed.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-1">
+                <div class="company-sidebar hover-lift">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">About Company</h3>
+                    <p class="text-muted" style="font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                        {{ job.company_description or 'No description provided by the company.' }}
+                    </p>
+
+                    <div class="flex flex-col gap-3">
+                        {% if job.company_industry %}
+                        <div class="flex items-center gap-2 text-muted" style="font-size: 0.875rem;">
+                            <i data-lucide="briefcase" style="width: 16px;"></i>
+                            {{ job.company_industry }}
+                        </div>
+                        {% endif %}
+                        {% if job.company_website %}
+                        <div class="flex items-center gap-2 text-muted" style="font-size: 0.875rem;">
+                            <i data-lucide="globe" style="width: 16px;"></i>
+                            <a href="{{ job.company_website }}" target="_blank" class="text-primary"
+                                style="text-decoration: none;">Visit Website</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function applyForInternship(jobId) {
+            if (!confirm('Are you sure you want to apply for this internship?')) return;
+
+            try {
+                const response = await fetch('/apply-job', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ job_id: jobId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Application submitted successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to apply: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred. Please try again.');
+            }
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

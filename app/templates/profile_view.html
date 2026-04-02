@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>My Profile - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard', section='overview') }}" class="sidebar-link">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('explore_companies') }}" class="sidebar-link">
+                    <i data-lucide="search"></i> Explore Companies
+                </a>
+                <a href="{{ url_for('placement_records') }}" class="sidebar-link">
+                    <i data-lucide="trending-up"></i> Placement Records
+                </a>
+                <a href="{{ url_for('student_dashboard', section='applications') }}" class="sidebar-link">
+                    <i data-lucide="briefcase"></i> My Applications
+                </a>
+                <a href="{{ url_for('student_dashboard', section='notifications') }}" class="sidebar-link">
+                    <i data-lucide="bell"></i> Notifications
+                    {% if unread_count is defined and unread_count > 0 %}
+                    <span class="badge"
+                        style="background:var(--danger-color); color:white; padding:2px 6px; border-radius:10px; font-size:0.7rem; margin-left:auto;">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile') }}" class="sidebar-link active">
+                    <i data-lucide="user"></i> Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{url_for('logout')}}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="flex items-center justify-between" style="width: 100%;">
+                    <div class="flex items-center">
+                        <button class="nav-menu-btn" onclick="toggleSidebar()"
+                            style="color: var(--text-main); margin-right: 1rem;">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <div>
+                            <h1 style="font-size: 1.5rem; font-weight: 700;">My Profile</h1>
+                            <p class="text-muted">Manage your personal information</p>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('complete_profile') }}" class="btn btn-outline btn-sm">Edit Profile</a>
+                </div>
+            </header>
+
+            <div class="dashboard-container" style="padding: 2rem;">
+                <div class="card animate-slide-up">
+                    <div class="flex items-center gap-6 mb-8">
+                        <div
+                            style="width: 80px; height: 80px; background-color: rgba(255, 255, 255, 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFFFFF; font-size: 2rem; overflow: hidden; border: 3px solid rgba(255, 255, 255, 0.1);">
+                            {% if user.profile_pic %}
+                            <img src="{{ resolve_url(user.profile_pic) }}" alt="Profile"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            {{ user.get('name', 'U')[0] }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h2 style="font-size: 1.5rem; font-weight: 700;">{{ user.get('name', 'User Name') }}</h2>
+                            <p class="text-muted mb-4">{{ user.get('email', 'email@example.com') }}</p>
+
+                            <div class="flex gap-3">
+                                {% if user.get('linkedin_url') %}
+                                <a href="{{ user.linkedin_url }}" target="_blank" class="btn btn-outline btn-sm"
+                                    style="padding: 0.5rem;" title="LinkedIn">
+                                    <i data-lucide="linkedin" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                {% endif %}
+                                {% if user.get('github_url') %}
+                                <a href="{{ user.github_url }}" target="_blank" class="btn btn-outline btn-sm"
+                                    style="padding: 0.5rem;" title="GitHub">
+                                    <i data-lucide="github" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                {% endif %}
+                                {% if user.get('portfolio_url') %}
+                                <a href="{{ user.portfolio_url }}" target="_blank" class="btn btn-outline btn-sm"
+                                    style="padding: 0.5rem;" title="Portfolio">
+                                    <i data-lucide="globe" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                {% endif %}
+                                {% if user.resume_path %}
+                                <a href="{{ resolve_url(user.resume_path) }}" target="_blank"
+                                    class="btn btn-primary btn-sm">
+                                    <i data-lucide="file-text"
+                                        style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                                    View Resume
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title text-muted"
+                        style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Academic Information</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div>
+                            <div class="text-muted mb-2" style="font-size: 0.875rem;">Enrollment Number</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{{ user.get('enrollment_number', 'Not
+                                set')
+                                }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-2" style="font-size: 0.875rem;">Branch</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{{ user.get('branch', 'Not set') }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-2" style="font-size: 0.875rem;">Admission Year</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{{ user.get('admission_year', 'Not set')
+                                }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-2" style="font-size: 0.875rem;">Passout Year</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{{
+                                user.get('passout_year', 'Not set') }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-2" style="font-size: 0.875rem;">CPI / CGPA</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{{
+                                user.get('cpi', 'Not set') }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-2" style="font-size: 0.875rem;">Study Type</div>
+                            <div style="font-size: 1.1rem; font-weight: 500;">{{ user.get('study_type', 'Not set') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title text-muted"
+                        style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Skills</div>
+
+                    <p style="color: var(--text-main); font-size: 1rem; line-height: 1.6;">
+                        {{ user.get('skills', 'No skills listed') }}
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

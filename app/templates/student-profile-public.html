@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>{{ student.name }} - Profile (Candidate View) - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <nav class="navbar animate-slide-up">
+        <div class="container nav-container">
+            <a href="{{url_for('index')}}" class="brand">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                <span class="text-primary">Kairva.LD</span>
+            </a>
+            <div class="nav-links">
+                <a href="{{url_for('company_dashboard')}}" class="btn btn-outline btn-sm"> <i data-lucide="arrow-left"
+                        style="width: 16px; height: 16px; margin-right: 6px;"></i> Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 6rem; padding-bottom: 4rem;">
+
+        {% if application %}
+        <div class="banner animate-fade-in mb-6"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border);">
+            <div class="flex justify-between items-center w-full">
+                <div>
+                    <span class="text-primary font-bold">Internship Application for {{ application.job_info.title
+                        }}</span>
+                    <span class="status-badge status-{{ application.status }} ml-3">{{ application.status|replace('_', '
+                        ') }}</span>
+                </div>
+                <div class="text-muted text-sm">Applied on: {{ application.applied_at }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Sidebar / Main Profile Info -->
+            <div class="col-span-1">
+                <div class="card animate-slide-up sticky-top" style="top: 6rem;">
+                    <div class="flex flex-col items-center text-center mb-6">
+                        <div
+                            style="width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFFFFF; font-size: 3rem; overflow: hidden; border: 4px solid rgba(255, 255, 255, 0.1); margin-bottom: 1.5rem;">
+                            {% if student.profile_pic %}
+                            <img src="{{ resolve_url(student.profile_pic) }}" alt="Profile"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            {{ student.name[0] }}
+                            {% endif %}
+                        </div>
+                        <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">{{ student.name }}</h1>
+                        <p class="text-muted">{{ student.email }}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-3 mb-6">
+                        {% if student.linkedin_url %}
+                        <a href="{{ student.linkedin_url }}" target="_blank"
+                            class="btn btn-outline w-full justify-start">
+                            <i data-lucide="linkedin" style="width: 18px; height: 18px; margin-right: 8px;"></i>
+                            LinkedIn Profile
+                        </a>
+                        {% endif %}
+                        {% if student.github_url %}
+                        <a href="{{ student.github_url }}" target="_blank" class="btn btn-outline w-full justify-start">
+                            <i data-lucide="github" style="width: 18px; height: 18px; margin-right: 8px;"></i> GitHub
+                            Profile
+                        </a>
+                        {% endif %}
+                        {% if student.portfolio_url %}
+                        <a href="{{ student.portfolio_url }}" target="_blank"
+                            class="btn btn-outline w-full justify-start">
+                            <i data-lucide="globe" style="width: 18px; height: 18px; margin-right: 8px;"></i> Portfolio
+                        </a>
+                        {% endif %}
+                        {% if student.resume_path %}
+                        <a href="{{ resolve_url(student.resume_path) }}" target="_blank"
+                            class="btn btn-primary w-full justify-start">
+                            <i data-lucide="file-text" style="width: 18px; height: 18px; margin-right: 8px;"></i> View
+                            Resume (PDF)
+                        </a>
+                        {% else %}
+                        <button class="btn btn-outline w-full justify-start" disabled
+                            style="opacity: 0.5; cursor: not-allowed;">
+                            <i data-lucide="file-x" style="width: 18px; height: 18px; margin-right: 8px;"></i> No Resume
+                            Uploaded
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if application %}
+                <div class="card animate-slide-up mt-6">
+                    <h3 class="font-bold text-white mb-4">Application Actions</h3>
+                    <div class="flex flex-col gap-3">
+                        <input type="hidden" id="currentAppId" value="{{ application.id }}">
+                        <button onclick="updateStatus('shortlisted')" class="btn btn-outline w-full"
+                            style="border-color: #F59E0B; color: #F59E0B;">Shortlist Candidate</button>
+                        <button onclick="updateStatus('hired')" class="btn btn-primary w-full"
+                            style="background: #10B981; border-color: #10B981;">Hire Candidate</button>
+                        <button onclick="updateStatus('rejected')" class="btn btn-outline w-full"
+                            style="border-color: var(--danger-color); color: var(--danger-color);">Reject
+                            Application</button>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Details Column -->
+            <div class="col-span-1 md:col-span-2">
+                <div class="card animate-slide-up mb-6">
+                    <div class="section-title text-muted"
+                        style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Academic Information</div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                        <div>
+                            <div class="text-muted mb-1" style="font-size: 0.875rem;">Branch</div>
+                            <div class="font-medium text-lg">{{ student.branch or 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-1" style="font-size: 0.875rem;">Enrollment Number</div>
+                            <div class="font-medium text-lg">{{ student.enrollment_number or 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-1" style="font-size: 0.875rem;">CPI / CGPA</div>
+                            <div class="font-medium text-lg">{{ student.cpi or 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-1" style="font-size: 0.875rem;">Passout Year</div>
+                            <div class="font-medium text-lg">{{ student.passout_year or 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-1" style="font-size: 0.875rem;">Degree Type</div>
+                            <div class="font-medium text-lg">{{ student.study_type or 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted mb-1" style="font-size: 0.875rem;">Admission Year</div>
+                            <div class="font-medium text-lg">{{ student.admission_year or 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card animate-slide-up">
+                    <div class="section-title text-muted"
+                        style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1.5rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Skills & Expertise</div>
+                    <div class="flex flex-wrap gap-2">
+                        {% if student.skills %}
+                        {% for skill in student.skills.split(',') %}
+                        <span
+                            style="background: rgba(255, 255, 255, 0.1); padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.875rem; border: 1px solid rgba(255, 255, 255, 0.1);">{{
+                            skill.strip() }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <span class="text-muted">No skills listed</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        {% if application %}
+        async function updateStatus(status) {
+            const appId = document.getElementById('currentAppId').value;
+            if (!confirm(`Are you sure you want to mark this candidate as ${status.replace('_', ' ')}?`)) return;
+
+            try {
+                const response = await fetch('/update-application-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ app_id: appId, status: status })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred');
+            }
+        }
+        {% endif %}
+    </script>
+</body>
+
+</html>

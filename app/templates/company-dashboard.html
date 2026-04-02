@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Company Dashboard - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 2rem auto;
+            padding: 3rem;
+            border: 1px solid var(--card-border);
+            width: 95%;
+            max-width: 950px;
+            border-radius: var(--radius);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* Removed internal scrollbar to use global styles */
+
+        .banner {
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .banner-warning {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+
+        .profile-item {
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.75rem;
+        }
+
+        .profile-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-value {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+
+<body data-is-verified="{{ 'true' if user.is_verified else 'false' }}">
+    <div class="dashboard-layout">
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active" onclick="showSection('listings')">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </a>
+                <a href="#" class="sidebar-link" onclick="showSection('applications')">
+                    <i data-lucide="mail"></i> Applications
+                </a>
+                <a href="{{ url_for('post_internship') }}" class="sidebar-link">
+                    <i data-lucide="plus-circle"></i> Post Internship
+                </a>
+
+                <a href="#" class="sidebar-link" onclick="showSection('profile')">
+                    <i data-lucide="building-2"></i> Company Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% if not user.is_verified %}
+            <div class="banner banner-warning animate-fade-in">
+                <i data-lucide="alert-triangle"></i>
+                <div>
+                    <strong>Verification Pending</strong>
+                    <p style="font-size: 0.875rem; margin-top: 0.25rem;">Your account is being reviewed by our admin.
+                        You will be able to post internships once verified.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <header class="dashboard-header">
+                <div class="flex items-center">
+                    <button class="nav-menu-btn" onclick="toggleSidebar()"
+                        style="color: var(--text-main); margin-right: 1rem;">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div>
+                        <h1 style="font-size: 1.5rem; font-weight: 700;">Welcome back, {{ user.name }}</h1>
+                        <p class="text-muted">Manage your listings and applicants.</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('post_internship') }}" class="btn btn-primary" {% if not user.is_verified
+                    %}style="pointer-events: none; opacity: 0.5;" {% endif %}>
+                    <i data-lucide="plus" style="width: 18px; height: 18px; margin-right: 0.5rem;"></i> Create New Post
+                </a>
+            </header>
+
+
+
+            <!-- Active Listings Table -->
+            <section id="section-listings">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="section-title">Your Listings</h2>
+                </div>
+
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead
+                            style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                            <tr>
+                                <th
+                                    style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                    Role</th>
+                                <th
+                                    style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                    Details</th>
+                                <th
+                                    style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                    Applicants</th>
+                                <th
+                                    style="text-align: right; padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 600; color: var(--text-main);">{{ job.title }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ job.mode }} • {{
+                                        job.duration }} • {% if job.stipend and job.stipend != '0' %}₹{{ job.stipend
+                                        }}{% else %}Unpaid{% endif %}</div>
+                                </td>
+                                <td style="padding: 1rem; color: var(--text-muted); font-size: 0.8125rem;">
+                                    <div><i data-lucide="map-pin"
+                                            style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                                        {{ job.location }}</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <a href="#" onclick="showSection('applications')" class="text-primary"
+                                        style="font-weight: 600;">{{ job.app_count }}</a>
+                                </td>
+                                <td style="padding: 1rem; text-align: right;">
+                                    <button class="btn btn-outline btn-sm edit-internship-btn"
+                                        data-job="{{ job|tojson|forceescape }}">
+                                        <i data-lucide="edit-2"
+                                            style="width: 14px; height: 14px; margin-right: 4px;"></i> Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No
+                                    internships posted yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Applications Section -->
+            <section id="section-applications" style="display: none;">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 class="section-title">Applications</h2>
+                </div>
+
+                {% set active_jobs_with_apps = [] %}
+                {% for job in jobs %}
+                {% set job_apps = [] %}
+                {% for app in applications %}
+                {% if app.job_id|int == job.id|int %}
+                {% set _ = job_apps.append(app) %}
+                {% endif %}
+                {% endfor %}
+
+                {% if job_apps %}
+                <div class="mb-20 animate-fade-in">
+                    <div class="flex justify-between items-end mb-4 px-2">
+                        <div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">{{ job.title
+                                }}</h3>
+                            <p class="text-muted" style="font-size: 0.8125rem;">{{ job_apps|length
+                                }} Applicants</p>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 0; overflow: hidden; border-color: rgba(59, 130, 246, 0.2);">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead
+                                style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                <tr>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.8125rem; color: var(--text-muted); width: 40%;">
+                                        Applicant</th>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.8125rem; color: var(--text-muted);">
+                                        Status</th>
+                                    <th
+                                        style="text-align: right; padding: 1rem; font-size: 0.8125rem; color: var(--text-muted);">
+                                        Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in job_apps %}
+                                <tr style="border-bottom: 1px solid var(--card-border);">
+                                    <td style="padding: 1rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div
+                                                style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.03); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                {% if app.profile_pic %}
+                                                <img src="{{ app.profile_pic }}" alt=""
+                                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                                {% else %}
+                                                <span style="font-size: 0.75rem; color: var(--primary-color);">{{
+                                                    app.student_name[0]|upper if app.student_name else '?' }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: var(--text-main);">{{
+                                                    app.student_name }}</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Applied: {{
+                                                    app.applied_at }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <span class="status-badge status-{{ app.status }}"
+                                            style="text-transform: capitalize; font-size: 0.75rem;">
+                                            {{ app.status|replace('_', ' ') }}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 1rem; text-align: right;">
+                                        <button class="btn btn-outline btn-sm review-btn"
+                                            data-app="{{ app|tojson|forceescape }}">
+                                            Review
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="card" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+                    <i data-lucide="mail-x" style="width: 48px; height: 48px; margin: 0 auto 1rem; opacity: 0.5;"></i>
+                    <p>No applications received yet.</p>
+                    <a href="{{ url_for('post_internship') }}" class="text-primary mt-2 inline-block">Post an
+                        Internship</a>
+                </div>
+                {% endfor %}
+            </section>
+
+
+            <!-- Company Profile Section -->
+            <section id="section-profile" style="display: none;">
+                <div class="flex justify-between items-start mb-10">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <h2 class="section-title" style="margin: 0;">Company Profile</h2>
+                            {% if user.is_verified %}
+                            <span class="status-badge status-active" style="font-size: 0.7rem;">Verified</span>
+                            {% else %}
+                            <span class="status-badge"
+                                style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; font-size: 0.7rem;">Verification
+                                Pending</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted" style="font-size: 0.875rem;">Public information visible to candidates and
+                            students.</p>
+                    </div>
+                    <button onclick="openProfileModal()" class="btn btn-primary btn-sm">
+                        <i data-lucide="edit" style="width: 14px; height: 14px; margin-right: 0.5rem;"></i> Edit Profile
+                    </button>
+                </div>
+
+                <div class="max-w-4xl">
+                    <!-- Essential Info -->
+                    <div class="card mb-10" style="padding: 2.5rem; border-color: rgba(255,255,255,0.05);">
+                        <div class="grid grid-cols-2 gap-y-10 gap-x-12">
+                            <div class="profile-item">
+                                <div class="text-muted block mb-2"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6;">
+                                    Legal & Official Name</div>
+                                <div class="font-semibold text-white" style="font-size: 1.25rem;">{{ user.name or 'Not
+                                    set' }}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="text-muted block mb-2"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6;">
+                                    Presence (Link)</div>
+                                <div class="font-medium">
+                                    {% if user.website %}
+                                    <a href="{{ user.website }}" target="_blank" class="text-primary hover:underline"
+                                        style="font-size: 1.125rem;">{{
+                                        user.website|replace('https://','')|replace('http://','') }}</a>
+                                    {% else %}
+                                    <span class="text-white opacity-40">Not registered</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="text-muted block mb-2"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6;">
+                                    Core Industry</div>
+                                <div class="text-white" style="font-size: 1.125rem;">{{ user.industry or 'Not disclosed'
+                                    }}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="text-muted block mb-2"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6;">
+                                    Primary HQ</div>
+                                <div class="text-white" style="font-size: 1.125rem;">{{ user.location or 'Not disclosed'
+                                    }}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="text-muted block mb-2"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6;">
+                                    Established In</div>
+                                <div class="text-white" style="font-size: 1.125rem;">{{ user.year_founded or 'Not
+                                    disclosed' }}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="text-muted block mb-2"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6;">
+                                    Team Magnitude</div>
+                                <div class="text-white" style="font-size: 1.125rem;">{{ user.size or 'Not disclosed' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Narrative Sections -->
+                    <div class="space-y-10">
+                        <div class="profile-narrative">
+                            <h3 class="text-primary mb-4"
+                                style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em;">Professional
+                                Summary</h3>
+                            <div class="text-white"
+                                style="line-height: 1.8; font-size: 1.05rem; opacity: 0.9; white-space: pre-wrap;">{{
+                                user.company_description or 'No formal description provided.' }}</div>
+                        </div>
+
+                        <div class="profile-narrative"
+                            style="padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <h3 class="text-primary mb-4"
+                                style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em;">Company
+                                Values & Culture</h3>
+                            <div class="text-white"
+                                style="line-height: 1.8; font-size: 1.05rem; opacity: 0.9; white-space: pre-wrap;">{{
+                                user.culture or 'The company culture details have not been shared yet.' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Job Modal -->
+    <div id="jobModal" class="modal">
+        <div class="modal-content animate-slide-up">
+            <h2 id="modalTitle" class="mb-4">Post New Internship</h2>
+            <form id="jobForm">
+                <input type="hidden" name="job_id" id="jobId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label class="input-label">Internship Title</label>
+                        <input type="text" name="title" id="jobTitleField" class="input-field"
+                            placeholder="e.g. Software Engineer Intern" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Internship Mode</label>
+                        <select name="mode" id="jobModeField" class="input-field" required>
+                            <option value="Online">Online</option>
+                            <option value="On-Site">On-Site</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Location</label>
+                        <input type="text" name="location" id="jobLocationField" class="input-field"
+                            placeholder="e.g. Remote or City" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Duration</label>
+                        <input type="text" name="duration" id="jobDurationField" class="input-field"
+                            placeholder="e.g. 3 Months" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Stipend (₹)</label>
+                        <input type="number" name="stipend" id="jobStipendField" class="input-field"
+                            placeholder="e.g. 10000">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Skills Required</label>
+                    <textarea name="skills_required" id="jobSkillsField" class="input-field"
+                        placeholder="e.g. Python, React, SQL" rows="2" style="resize: none;" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Description</label>
+                    <textarea name="description" id="jobDescriptionField" class="input-field" rows="3"
+                        style="resize: none;" required></textarea>
+                </div>
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeModal()" class="btn btn-outline w-full">Cancel</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary w-full">Post Internship</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content animate-slide-up">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-6">
+                    <div id="revPic"
+                        style="width: 64px; height: 64px; border-radius: 50%; background: var(--primary-light); overflow: hidden; border: 2px solid var(--primary-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <!-- Pic injected here -->
+                    </div>
+                    <div>
+                        <h2 style="font-size: 1.75rem; font-weight: 700; color: var(--text-main);">Review Application
+                        </h2>
+                        <p id="revRoleHeader" style="font-size: 1rem; color: var(--primary-color); font-weight: 500;">
+                        </p>
+                    </div>
+                </div>
+                <button onclick="closeReviewModal()" class="btn btn-outline btn-sm"
+                    style="padding: 6px 10px; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-10 mb-10">
+                <!-- Academic Column -->
+                <div>
+                    <h3 class="section-title mb-6"
+                        style="border-bottom: 2px solid var(--primary-light); padding-bottom: 0.75rem; font-size: 1.125rem;">
+                        Student Profile</h3>
+                    <div class="space-y-6">
+                        <div class="profile-item"
+                            style="border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1rem;">
+                            <div class="profile-label" style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">
+                                Full Name</div>
+                            <div id="revName" class="profile-value" style="font-size: 1.125rem;">-</div>
+                        </div>
+                        <div class="profile-item"
+                            style="border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1rem;">
+                            <div class="profile-label" style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">
+                                Email Contact</div>
+                            <div id="revEmail" class="profile-value">-</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="profile-item">
+                                <div class="profile-label"
+                                    style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">Enrollment</div>
+                                <div id="revEnrollment" class="profile-value">-</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="profile-label"
+                                    style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">Academics</div>
+                                <div id="revCPI" class="profile-value text-primary"
+                                    style="font-weight: 700; font-size: 1.125rem;">-</div>
+                            </div>
+                        </div>
+                        <div class="profile-item"
+                            style="border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1rem;">
+                            <div class="profile-label" style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">
+                                Branch & Degree</div>
+                            <div class="profile-value">
+                                <span id="revBranch">-</span>
+                                <span id="revStudyType"
+                                    style="color: var(--text-muted); font-size: 0.85em; margin-left: 8px; font-weight: 400;"></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div id="revAdmissionContainer" class="profile-item">
+                                <div class="profile-label"
+                                    style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">Batch</div>
+                                <div id="revAdmission" class="profile-value">-</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="profile-label"
+                                    style="margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.7;">Passout</div>
+                                <div id="revPassout" class="profile-value">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Column -->
+                <div>
+                    <h3 class="section-title mb-6"
+                        style="border-bottom: 2px solid var(--primary-light); padding-bottom: 0.75rem; font-size: 1.125rem;">
+                        Application Progress</h3>
+                    <div class="space-y-6">
+                        <div class="profile-item"
+                            style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: var(--radius); border-left: 4px solid var(--primary-color);">
+                            <div class="profile-label" style="margin-bottom: 0.5rem;">Target Role</div>
+                            <div id="revRole" class="profile-value text-primary"
+                                style="font-weight: 700; font-size: 1.25rem;">-</div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="profile-label mb-3">Key Skills & Expertise</div>
+                            <div id="revSkills" class="text-main"
+                                style="font-size: 1rem; background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border-color); line-height: 1.6;">
+                                -</div>
+                        </div>
+                        <div class="mt-8">
+                            <div class="profile-label mb-4">Portfolio & Documentation</div>
+                            <div id="revLinks" class="flex flex-col gap-3">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4 mt-4" style="border-top: 1px solid var(--border-color); padding-top: 2rem;">
+                <input type="hidden" id="currentAppId">
+                <button onclick="updateApplicationStatus('shortlisted')" class="btn btn-outline flex-1"
+                    style="border-color: #F59E0B; color: #F59E0B; height: 50px;">Shortlist Candidate</button>
+                <button onclick="updateApplicationStatus('hired')" class="btn btn-primary flex-1"
+                    style="background: #10B981; border-color: #10B981; height: 50px;">Confirm Hire</button>
+                <button onclick="updateApplicationStatus('rejected')" class="btn btn-outline flex-1"
+                    style="border-color: var(--danger-color); color: var(--danger-color); height: 50px;">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">Edit Company Profile</h2>
+                <button onclick="closeProfileModal()" class="btn btn-outline btn-sm"
+                    style="padding: 4px 8px;">✕</button>
+            </div>
+            <form id="profileForm">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label class="input-label">Company Name</label>
+                        <input type="text" name="name" class="input-field" value="{{ user.name or '' }}" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Website</label>
+                        <input type="url" name="website" class="input-field" value="{{ user.website or '' }}"
+                            placeholder="https://example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Year Founded</label>
+                        <input type="number" name="year_founded" class="input-field"
+                            value="{{ user.year_founded or '' }}" placeholder="2020">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Industry/Domain</label>
+                        <input type="text" name="industry" class="input-field" value="{{ user.industry or '' }}"
+                            placeholder="Tech, Fintech, etc.">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Location</label>
+                        <input type="text" name="location" class="input-field" value="{{ user.location or '' }}"
+                            placeholder="City, Country">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Company Size</label>
+                        <select name="size" class="input-field">
+                            <option value="1-10" {% if user.size=='1-10' %}selected{% endif %}>1-10 employees</option>
+                            <option value="11-50" {% if user.size=='11-50' %}selected{% endif %}>11-50 employees
+                            </option>
+                            <option value="51-200" {% if user.size=='51-200' %}selected{% endif %}>51-200 employees
+                            </option>
+                            <option value="201-500" {% if user.size=='201-500' %}selected{% endif %}>201-500 employees
+                            </option>
+                            <option value="500+" {% if user.size=='500+' %}selected{% endif %}>500+ employees</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group mt-4">
+                    <label class="input-label">Company Description</label>
+                    <textarea name="company_description" class="input-field" rows="3" style="resize: none;"
+                        required>{{ user.company_description or '' }}</textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Team Culture</label>
+                    <textarea name="culture" class="input-field" rows="2" style="resize: none;"
+                        placeholder="What's it like to work here?">{{ user.culture or '' }}</textarea>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="button" onclick="closeProfileModal()" class="btn btn-outline w-full">Cancel</button>
+                    <button type="submit" class="btn btn-primary w-full">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        function openModal() {
+            const body = document.body;
+            // Verification check removed as per previous task
+            document.getElementById('jobId').value = '';
+            document.getElementById('jobForm').reset();
+            document.getElementById('modalTitle').innerText = 'Post New Internship';
+            document.getElementById('submitBtn').innerText = 'Post Internship';
+            document.getElementById('jobModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        function closeModal() {
+            document.getElementById('jobModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        function editInternship(job) {
+            document.getElementById('jobId').value = job.id;
+            document.getElementById('jobTitleField').value = job.title;
+            document.getElementById('jobModeField').value = job.mode;
+            document.getElementById('jobLocationField').value = job.location;
+            document.getElementById('jobDurationField').value = job.duration;
+            document.getElementById('jobStipendField').value = job.stipend || '';
+            document.getElementById('jobSkillsField').value = job.skills_required;
+            document.getElementById('jobDescriptionField').value = job.description;
+
+            document.getElementById('modalTitle').innerText = 'Edit Internship';
+            document.getElementById('submitBtn').innerText = 'Save Changes';
+            document.getElementById('jobModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+            lucide.createIcons();
+        }
+
+        document.querySelectorAll('.edit-internship-btn').forEach(btn => {
+            btn.onclick = () => {
+                editInternship(JSON.parse(btn.getAttribute('data-job')));
+            };
+        });
+
+        function openProfileModal() {
+            document.getElementById('profileModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        function showSection(section) {
+            const listingsSection = document.getElementById('section-listings');
+            const applicationsSection = document.getElementById('section-applications');
+            const profileSection = document.getElementById('section-profile');
+            const navLinks = document.querySelectorAll('.sidebar-link');
+
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Hide all
+            listingsSection.style.display = 'none';
+            applicationsSection.style.display = 'none';
+            profileSection.style.display = 'none';
+
+            if (section === 'listings') {
+                listingsSection.style.display = 'block';
+                document.querySelector('[onclick="showSection(\'listings\')"]')?.classList.add('active');
+            } else if (section === 'applications') {
+                applicationsSection.style.display = 'block';
+                document.querySelector('[onclick="showSection(\'applications\')"]')?.classList.add('active');
+            } else if (section === 'profile') {
+                profileSection.style.display = 'block';
+                document.querySelector('[onclick="showSection(\'profile\')"]')?.classList.add('active');
+            }
+            lucide.createIcons();
+        }
+
+        document.getElementById('jobForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const jobId = data.job_id;
+            delete data.job_id;
+
+            const url = jobId ? `/update-job/${jobId}` : '/post-job';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred');
+            }
+        };
+
+        document.getElementById('profileForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/update-company-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update profile: ' + (result.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred');
+            }
+        };
+
+        // Review Logic
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        document.querySelectorAll('.review-btn').forEach(btn => {
+            btn.onclick = () => {
+                reviewApplication(JSON.parse(btn.getAttribute('data-app')));
+            };
+        });
+
+        function reviewApplication(app) {
+            document.getElementById('currentAppId').value = app.id;
+            document.getElementById('reviewModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+
+            // Academic Info
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val || 'N/A';
+            };
+
+            setVal('revName', app.student_name);
+            setVal('revEmail', app.student_email);
+            setVal('revEnrollment', app.student_enrollment);
+            setVal('revStudyType', app.student_study_type ? `(${app.student_study_type})` : '');
+            setVal('revBranch', app.student_branch);
+            setVal('revAdmission', app.student_admission);
+            setVal('revPassout', app.student_passout);
+            setVal('revCPI', app.student_cpi);
+
+            // Application Details
+            setVal('revRole', app.job_info?.title);
+            setVal('revRoleHeader', app.job_info?.title);
+
+            // Profile Pic
+            const picDiv = document.getElementById('revPic');
+            if (app.profile_pic) {
+                const picSrc = app.profile_pic;
+                picDiv.innerHTML = `<img src="${picSrc}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                const initial = (app.student_name || '?')[0].toUpperCase();
+                picDiv.innerHTML = `<span style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">${initial}</span>`;
+            }
+
+            // Skills
+            const skillsDiv = document.getElementById('revSkills');
+            if (app.student_skills) {
+                const skillsList = app.student_skills.split(',').map(s => `<span style="display:inline-block; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:12px; font-size:0.75rem; margin:2px;">${s.trim()}</span>`).join('');
+                skillsDiv.innerHTML = skillsList;
+            } else {
+                skillsDiv.innerText = 'No skills listed';
+            }
+
+            // Links
+            const linksDiv = document.getElementById('revLinks');
+            linksDiv.innerHTML = '';
+
+            // Helper to create link items
+            const createLink = (url, icon, text, isPrimary = false) => {
+                if (!url) return '';
+                const btnClass = isPrimary ? 'btn-primary' : 'btn-outline';
+                return `<a href="${url}" target="_blank" class="btn ${btnClass} btn-sm w-full justification-start" style="text-align:left; justify-content: flex-start; display: flex; align-items: center;">
+                            <i data-lucide="${icon}" style="width:16px; height:16px; margin-right:8px;"></i> ${text}
+                         </a>`;
+            };
+
+            linksDiv.innerHTML += createLink(app.linkedin_url, 'linkedin', 'LinkedIn Profile');
+            linksDiv.innerHTML += createLink(app.github_url, 'github', 'GitHub Profile');
+            linksDiv.innerHTML += createLink(app.portfolio_url, 'globe', 'Portfolio Website');
+
+            if (app.resume_path) {
+                const resumeUrl = app.resume_path;
+                linksDiv.innerHTML += `<a href="${resumeUrl}" target="_blank" class="btn btn-primary w-full justify-center mt-2">
+                                            <i data-lucide="file-text" style="width:16px; height:16px; margin-right:6px;"></i> View Resume (PDF)
+                                        </a>`;
+            } else {
+                linksDiv.innerHTML += `<div class="text-muted text-sm text-center mt-2">No Resume Uploaded</div>`;
+            }
+
+            document.getElementById('reviewModal').style.display = 'block';
+            lucide.createIcons();
+        }
+
+        async function updateApplicationStatus(status) {
+            const appId = document.getElementById('currentAppId').value;
+            if (!confirm(`Are you sure you want to set status to ${status}?`)) return;
+
+            try {
+                const response = await fetch('/update-application-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ app_id: appId, status: status })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Update failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred');
+            }
+        }
+
+        document.querySelectorAll('.review-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const app = JSON.parse(btn.getAttribute('data-app'));
+                reviewApplication(app);
+            });
+        });
+
+        // Initialize icons
+        lucide.createIcons();
+
+        // Handle section parameter from URL
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section');
+            if (section) {
+                if (section === 'post-job') {
+                    openModal();
+                    showSection('listings');
+                } else {
+                    showSection(section);
+                }
+            }
+        });
+
+        // Add event listeners for edit buttons
+        document.querySelectorAll('.edit-internship-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const job = JSON.parse(btn.getAttribute('data-job'));
+                editInternship(job);
+            });
+        });
+    </script>
+</body>
+
+</html>

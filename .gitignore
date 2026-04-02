@@ -1,0 +1,33 @@
+# Environment variables (secrets)
+.env
+.env.production
+.env.*
+
+# API keys / secrets files
+apis.txt
+serviceAccountKey.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+
+# Database
+*.db
+
+# Uploads (now stored in Supabase)
+app/static/uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+tmp/

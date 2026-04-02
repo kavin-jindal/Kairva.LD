@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kairva.LD</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Homepage Specific Styles - Creamish Light Theme */
+        .hero {
+            padding: 8rem 0 6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.6;
+            z-index: -1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--primary-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 1s ease-out;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hero-badge:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--primary-hover);
+            transform: scale(1.05);
+            box-shadow: 0 0 18px rgba(59, 130, 246, 0.1);
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+        }
+
+        .hero-title:hover {
+            color: var(--primary-color);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto 3rem;
+            font-weight: 400;
+            line-height: 1.8;
+        }
+
+        .search-container {
+            background: rgba(18, 18, 18, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.5rem;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        .search-container:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 24px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Section Styling */
+        section {
+            padding: 6rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Trusted By */
+        .trusted-by {
+            padding: 2rem 0;
+            background-color: rgba(255, 255, 255, 0.02);
+            text-align: center;
+        }
+
+        .logo-grid {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            opacity: 0.5;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .company-logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: var(--font-heading);
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-color);
+            box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--primary-color);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.25rem;
+        }
+
+        /* Top Internship Destinations - Ranking Style */
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.25rem;
+            margin-top: 3rem;
+        }
+
+        .destination-card {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            background: var(--card-bg);
+            padding: 1.25rem 1.5rem;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .destination-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary-color), rgba(59, 130, 246, 0.3));
+            border-radius: 4px 0 0 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .destination-card:hover {
+            transform: translateX(6px);
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.3);
+        }
+
+        .destination-card:hover::before {
+            opacity: 1;
+        }
+
+        .dest-rank {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .dest-rank.gold {
+            background: rgba(245, 158, 11, 0.15);
+            color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .dest-rank.silver {
+            background: rgba(148, 163, 184, 0.15);
+            color: #94A3B8;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .dest-rank.bronze {
+            background: rgba(180, 120, 60, 0.15);
+            color: #CD7F32;
+            border: 1px solid rgba(180, 120, 60, 0.25);
+        }
+
+        .dest-rank.default {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .dest-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dest-info h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dest-info p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .dest-count {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* How it Works */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+            position: relative;
+        }
+
+        .step-card {
+            background: transparent;
+            border: none;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-number {
+            font-size: 4rem;
+            font-weight: 800;
+            color: rgba(59, 130, 246, 0.15);
+            line-height: 1;
+            margin-bottom: -1rem;
+            position: absolute;
+            top: -1.5rem;
+            left: -1rem;
+            z-index: -1;
+        }
+
+        /* Testimonials */
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .testimonial-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            margin-right: 1rem;
+        }
+
+        /* CTA */
+        .cta-section {
+            text-align: center;
+            padding: 8rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar animate-slide-up">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="brand">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                <span class="text-primary">Kairva.LD</span>
+            </a>
+            <button class="nav-menu-btn" onclick="toggleMenu()">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                <a href="{{ url_for('explore_companies') }}" class="nav-link">Explore Companies</a>
+                <a href="{{url_for('placement_records')}}" class="nav-link">Placement Records</a>
+                <a href="{{url_for('for_companies')}}" class="nav-link">For Companies</a>
+                {% if user %}
+                {% if user.role == 'student' %}
+                <a href="{{url_for('student_dashboard')}}" class="btn btn-outline btn-sm">Dashboard</a>
+                {% elif user.role == 'company' %}
+                <a href="{{url_for('company_dashboard')}}" class="btn btn-outline btn-sm">Dashboard</a>
+                {% elif user.role == 'admin' %}
+                <a href="{{url_for('admin_dashboard')}}" class="btn btn-outline btn-sm">Admin</a>
+                {% endif %}
+                <a href="{{url_for('logout')}}" class="btn btn-primary btn-sm">Logout</a>
+                {% else %}
+                <a href="{{url_for('login')}}" class="btn btn-outline btn-sm">Student Login</a>
+                <a href="{{url_for('register')}}" class="btn btn-primary btn-sm">Student Signup</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+    </script>
+
+    <header class="hero">
+        <div class="container animate-fade-in animate-delay-1" style="text-align: left;">
+
+            <h1 class="hero-title">Your Gateway to <br><span class="text-primary">Top</span> Internships</h1>
+            <p class="hero-subtitle" style="margin-left: 0; max-width: 700px;">Stop scrolling through endless generic
+                listings. Get
+                matched with top-tier
+                internships based on your actual skills, projects, and career goals.</p>
+
+            <div class="mt-6 flex gap-4 flex-wrap desktop-only">
+                <a href="{{url_for('register')}}" class="btn btn-primary"
+                    style="padding: 1rem 2rem; font-size: 1.125rem;">
+                    Get Started
+                </a>
+                <a href="{{url_for('explore_companies')}}" class="btn btn-outline"
+                    style="padding: 1rem 2rem; font-size: 1.125rem;">
+                    Explore Companies
+                </a>
+            </div>
+
+            <div class="mt-6 p-4 rounded-xl mobile-only"
+                style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
+                <div class="flex items-center gap-3 mb-2">
+                    <i data-lucide="monitor" class="text-primary" size="24"></i>
+                    <h3 style="font-size: 1.1rem; color: var(--text-main); font-weight: 600;">Desktop Optimized</h3>
+                </div>
+                <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">Kairva.LD is designed for
+                    desktop. Please use a computer to access all features, including the dashboards and registration.
+                </p>
+            </div>
+
+
+        </div>
+    </header>
+
+
+
+    <!-- Top Internship Destinations Section -->
+    <section>
+        <div class="container">
+            <div class="text-center mb-8 animate-fade-in">
+                <h2 class="section-title text-center" style="font-size: 2.5rem; margin-bottom: 1rem;">Top Internship
+                    Destinations</h2>
+                <p class="text-muted" style="max-width: 650px; margin: 0 auto; font-size: 1.125rem;">Based on total
+                    student placements across the last four academic cycles (2022–2026). See where our community is
+                    making an impact.</p>
+            </div>
+
+            <div class="destinations-grid">
+                <div class="destination-card animate-slide-up animate-delay-1">
+                    <div class="dest-rank gold">#1</div>
+                    <div class="dest-info">
+                        <h3>IFFCO</h3>
+                        <p>Kalol / Kandla</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(245, 158, 11, 0.12); color: #F59E0B;">49 placed
+                    </div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-1">
+                    <div class="dest-rank silver">#2</div>
+                    <div class="dest-info">
+                        <h3>ONGC</h3>
+                        <p>Hazira / Mehsana / Ankleshwar</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(148, 163, 184, 0.12); color: #94A3B8;">27 placed
+                    </div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-2">
+                    <div class="dest-rank bronze">#3</div>
+                    <div class="dest-info">
+                        <h3>GNFC</h3>
+                        <p>Bharuch</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(180, 120, 60, 0.12); color: #CD7F32;">9 placed</div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-2">
+                    <div class="dest-rank default">#4</div>
+                    <div class="dest-info">
+                        <h3>Cess Automation</h3>
+                        <p>Ahmedabad</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">7
+                        placed</div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-3">
+                    <div class="dest-rank default">#5</div>
+                    <div class="dest-info">
+                        <h3>Axis Solutions Pvt. Ltd.</h3>
+                        <p>Ahmedabad</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">7
+                        placed</div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-3">
+                    <div class="dest-rank default">#6</div>
+                    <div class="dest-info">
+                        <h3>Pima Controls</h3>
+                        <p>Ahmedabad</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">6
+                        placed</div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-4">
+                    <div class="dest-rank default">#7</div>
+                    <div class="dest-info">
+                        <h3>IGTR Ahmedabad</h3>
+                        <p>Ahmedabad</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">5
+                        placed</div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-4">
+                    <div class="dest-rank default">#8</div>
+                    <div class="dest-info">
+                        <h3>Banas Dairy</h3>
+                        <p>Palanpur</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">5
+                        placed</div>
+                </div>
+
+                <div class="destination-card animate-slide-up animate-delay-1">
+                    <div class="dest-rank default">#9</div>
+                    <div class="dest-info">
+                        <h3>Iris Automation</h3>
+                        <p>Ahmedabad</p>
+                    </div>
+                    <div class="dest-count" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-color);">4
+                        placed</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Features Section -->
+    <section>
+        <div class="container">
+            <div class="text-center animate-fade-in">
+                <h2 class="section-title text-center" style="font-size: 2.5rem; margin-bottom: 1rem;">More Than Just an
+                    Internship Portal</h2>
+                <p class="text-muted" style="max-width: 600px; margin: 0 auto; font-size: 1.125rem;">We provide the data
+                    and insights you need to make informed career decisions.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card animate-slide-up animate-delay-1">
+                    <div class="feature-icon"><i data-lucide="sparkles"></i></div>
+                    <h3 class="mb-2" style="font-size: 1.5rem;">Unified Profile</h3>
+                    <p class="text-muted">Showcase your academic records, skills, and resume in one professional profile
+                        that works for every application.</p>
+                </div>
+                <div class="feature-card animate-slide-up animate-delay-2">
+                    <div class="feature-icon"><i data-lucide="bar-chart-3"></i></div>
+                    <h3 class="mb-2" style="font-size: 1.5rem;">Placement Insights</h3>
+                    <p class="text-muted">Access historical data from past placement cycles to see top internship
+                        destinations and industry trends.</p>
+                </div>
+                <div class="feature-card animate-slide-up animate-delay-3">
+                    <div class="feature-icon"><i data-lucide="zap"></i></div>
+                    <h3 class="mb-2" style="font-size: 1.5rem;">One-Click Apply</h3>
+                    <p class="text-muted">Apply to multiple verified internships instantly. No more filling out the same
+                        huge forms repeatedly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section style="background-color: rgba(255, 255, 255, 0.02);">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title text-center" style="font-size: 2.5rem; margin-bottom: 1rem;">How It Works</h2>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Complete Profile</h3>
+                    <p class="text-muted">Sign up and fill in your academic details, skills, and upload your resume to
+                        get verified.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Explore Listings</h3>
+                    <p class="text-muted">Browse through verified internship opportunities from top-tier companies
+                        tailored to your branch.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Track Status</h3>
+                    <p class="text-muted">Apply with one click and track your application status updates in real-time on
+                        your dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- CTA -->
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="container">
+            <h2 style="font-size: 3rem; margin-bottom: 1.5rem; line-height: 1.2;">Ready to launch <br
+                    class="hidden-desktop">your career?</h2>
+            <p class="text-muted" style="margin-bottom: 2.5rem; font-size: 1.25rem;">Join students from across LDCE
+                finding opportunities every day.</p>
+            <div class="flex justify-center gap-4 flex-wrap">
+                <a href="register.html" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.125rem;">Get
+                    Started Now</a>
+                <a href="{{url_for('explore_companies')}}" class="btn btn-outline"
+                    style="padding: 1rem 2.5rem; font-size: 1.125rem;">Browse Internships</a>
+            </div>
+        </div>
+    </section>
+
+    <footer style="background-color: #000000; padding: 4rem 0; border-top: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="flex justify-between items-center flex-col" style="gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="brand text-center"><span class="text-white">Kairva.LD</span></a>
+                <p class="text-muted text-center" style="font-size: 0.875rem; margin-top: -1rem;">Built for LD College
+                    of Engineering</p>
+                <div class="flex gap-6 text-muted">
+                    <a href="{{ url_for('about') }}">About</a>
+                </div>
+                <p class="text-muted text-center" style="font-size: 0.875rem;">&copy; 2026 Kairva Corp.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

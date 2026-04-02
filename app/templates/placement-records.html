@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Placement Records - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .data-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-right: 0.75rem;
+        }
+
+        .top-3-rank {
+            background: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    {% if user %}
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard', section='overview') }}" class="sidebar-link">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('explore_companies') }}" class="sidebar-link">
+                    <i data-lucide="search"></i> Explore Companies
+                </a>
+                <a href="{{ url_for('placement_records') }}" class="sidebar-link active">
+                    <i data-lucide="trending-up"></i> Placement Records
+                </a>
+                <a href="{{ url_for('student_dashboard', section='applications') }}" class="sidebar-link">
+                    <i data-lucide="briefcase"></i> My Applications
+                </a>
+                <a href="{{ url_for('student_dashboard', section='notifications') }}" class="sidebar-link">
+                    <i data-lucide="bell"></i> Notifications
+                    {% if unread_count is defined and unread_count > 0 %}
+                    <span class="badge"
+                        style="background:var(--danger-color); color:white; padding:2px 6px; border-radius:10px; font-size:0.7rem; margin-left:auto;">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile') }}" class="sidebar-link">
+                    <i data-lucide="user"></i> Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{url_for('logout')}}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="flex items-center justify-between" style="width: 100%;">
+                    <div class="flex items-center">
+                        <button class="nav-menu-btn" onclick="toggleSidebar()"
+                            style="color: var(--text-main); margin-right: 1rem;">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <div>
+                            <h1 style="font-size: 1.5rem; font-weight: 700;">Placement Records</h1>
+                            <p class="text-muted">Historical data and industry distribution (2022–2026)</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-container" style="padding: 2rem;">
+                {% else %}
+                <nav class="navbar animate-slide-up">
+                    <div class="container nav-container">
+                        <a href="{{ url_for('index') }}" class="brand">
+                            <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                                style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                            <span class="text-primary">Kairva.LD</span>
+                        </a>
+                        <button class="nav-menu-btn" onclick="toggleMenu()">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <div class="nav-links" id="navLinks">
+                            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                            <a href="{{ url_for('explore_companies') }}" class="nav-link">Explore Companies</a>
+                            <a href="{{ url_for('placement_records') }}" class="nav-link active">Placement Records</a>
+                            <a href="{{ url_for('for_companies') }}" class="nav-link">For Companies</a>
+                            {% if user %}
+                            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline btn-sm">Dashboard</a>
+                            {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </nav>
+                <div class="container" style="padding-top: 8rem; padding-bottom: 4rem;">
+                    <div class="mb-12">
+                        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">Placement Records</h1>
+                        <p class="text-muted">Historical data and industry distribution (2022–2026)</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- High Level Stats -->
+                    <div class="stat-grid">
+                        <div class="card stat-card animate-slide-up">
+                            <div class="stat-title">Total Placements</div>
+                            <div class="stat-value">{{ data.analysis_metadata.total_records }}</div>
+                            <p class="text-muted mt-2" style="font-size: 0.75rem;">Verified records since 2022</p>
+                        </div>
+                        <div class="card stat-card animate-slide-up animate-delay-1">
+                            <div class="stat-title">Primary Sector</div>
+                            <div class="stat-value" style="font-size: 1.25rem;">{{ data.analysis_metadata.primary_sector
+                                }}
+                            </div>
+                            <p class="text-muted mt-2" style="font-size: 0.75rem;">Most frequent industries</p>
+                        </div>
+                        <div class="card stat-card animate-slide-up animate-delay-2">
+                            <div class="stat-title">Placement Mode</div>
+                            <div class="stat-value">{{ data.analysis_metadata.mode }}</div>
+                            <div class="progress-bar-container">
+                                <div class="progress-value" style="width: 94%;"></div>
+                            </div>
+                            <p class="text-muted mt-2" style="font-size: 0.75rem;">Preference for offline roles</p>
+                        </div>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <!-- Overall Top Internships -->
+                        <div class="card animate-slide-up animate-delay-3">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="section-title" style="margin-bottom: 0;">Overall Top Destinations</h2>
+                                <span class="status-badge status-active">2022-2026</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="display: flex; align-items: center; gap: 0.5rem;"><i
+                                                    data-lucide="building-2" style="width: 14px; height: 14px;"></i>
+                                                Company
+                                            </th>
+                                            <th style="text-align: right;">Placements</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in data.overall_top_internships %}
+                                        <tr>
+                                            <td class="flex items-center">
+                                                <span
+                                                    class="rank-badge {% if loop.index <= 3 %}top-3-rank{% endif %}">{{
+                                                    loop.index
+                                                    }}</span>
+                                                <span style="font-weight: 500; color: var(--text-main);">{{ item.company
+                                                    }}</span>
+                                            </td>
+                                            <td
+                                                style="text-align: right; color: var(--primary-color); font-weight: 700;">
+                                                {{
+                                                item.count }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Last Year's Top Internships -->
+                        <div class="card animate-slide-up animate-delay-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="section-title" style="margin-bottom: 0;">Last Academic Cycle</h2>
+                                <span class="status-badge"
+                                    style="background: rgba(255, 255, 255, 0.05); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.1);">2025-2026</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="display: flex; align-items: center; gap: 0.5rem;"><i
+                                                    data-lucide="building-2" style="width: 14px; height: 14px;"></i>
+                                                Company
+                                            </th>
+                                            <th style="text-align: right;">Placements</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in data.last_year_top_internships %}
+                                        <tr>
+                                            <td class="flex items-center">
+                                                <span
+                                                    class="rank-badge {% if loop.index <= 3 %}top-3-rank{% endif %}">{{
+                                                    loop.index
+                                                    }}</span>
+                                                <span style="font-weight: 500; color: var(--text-main);">{{ item.company
+                                                    }}</span>
+                                            </td>
+                                            <td
+                                                style="text-align: right; color: var(--primary-color); font-weight: 700;">
+                                                {{
+                                                item.count }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if user %}
+        </main>
+    </div>
+    {% else %}
+    </div>
+    {% endif %}
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

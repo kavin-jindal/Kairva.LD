@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>{{ company.name }} - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .company-hero {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .company-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+            background: var(--bg-color);
+            border-radius: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            flex-shrink: 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 1.25rem;
+            border-radius: var(--radius);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .about-section {
+            margin-bottom: 3rem;
+        }
+
+        .internships-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar animate-slide-up">
+        <div class="container nav-container">
+            <a href="{{url_for('index')}}" class="brand">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                <span class="text-primary">Kairva.LD</span>
+            </a>
+            <div class="nav-links">
+                <a href="{{url_for('index')}}" class="nav-link">
+                    <i data-lucide="home" style="width: 18px; height: 18px; margin-right: 4px;"></i> Home
+                </a>
+                <a href="{{url_for('explore_companies')}}" class="nav-link text-white">
+                    <i data-lucide="search" style="width: 18px; height: 18px; margin-right: 4px;"></i> Explore Companies
+                </a>
+                <a href="{{url_for('for_companies')}}" class="nav-link">
+                    <i data-lucide="building-2" style="width: 18px; height: 18px; margin-right: 4px;"></i> For Companies
+                </a>
+                {% if user %}
+                {% if user.role == 'student' %}
+                <a href="{{url_for('student_dashboard')}}" class="btn btn-outline btn-sm">
+                    <i data-lucide="layout-dashboard" style="width: 16px; height: 16px; margin-right: 4px;"></i>
+                    Dashboard
+                </a>
+                {% elif user.role == 'company' %}
+                <a href="{{url_for('company_dashboard')}}" class="btn btn-outline btn-sm">
+                    <i data-lucide="layout-dashboard" style="width: 16px; height: 16px; margin-right: 4px;"></i>
+                    Dashboard
+                </a>
+                {% elif user.role == 'admin' %}
+                <a href="{{url_for('admin_dashboard')}}" class="btn btn-outline btn-sm">
+                    <i data-lucide="shield" style="width: 16px; height: 16px; margin-right: 4px;"></i> Admin
+                </a>
+                {% endif %}
+                <a href="{{url_for('logout')}}" class="btn btn-primary btn-sm">
+                    <i data-lucide="log-out" style="width: 16px; height: 16px; margin-right: 4px;"></i> Logout
+                </a>
+                {% else %}
+                <a href="{{url_for('login')}}" class="btn btn-outline btn-sm">Student Login</a>
+                <a href="{{url_for('register')}}" class="btn btn-primary btn-sm">Student Signup</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 6rem; padding-bottom: 4rem;">
+        <a href="{{ url_for('explore_companies') }}" class="back-link">
+            <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> Back to Explore
+        </a>
+
+        <div class="company-hero animate-slide-up hover-lift">
+            <div class="hero-logo">
+                {{ (company.name or 'C')[0]|upper }}
+            </div>
+            <div style="flex: 1;">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">{{ company.name }}
+                        </h1>
+                        <div class="flex items-center gap-4 text-muted">
+                            <span><i data-lucide="map-pin" style="width: 16px; height: 16px; margin-right: 4px;"></i> {{
+                                company.location or 'Multiple Locations' }}</span>
+                            <span><i data-lucide="building" style="width: 16px; height: 16px; margin-right: 4px;"></i>
+                                {{ company.industry or 'Technology' }}</span>
+                        </div>
+                    </div>
+                    {% if company.website %}
+                    <a href="{{ company.website if company.website.startswith('http') else 'https://' + company.website }}"
+                        target="_blank" class="btn btn-primary">
+                        Visit Website <i data-lucide="external-link"
+                            style="width: 16px; height: 16px; margin-left: 4px;"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div class="md:col-span-3">
+                <section class="about-section card animate-slide-up animate-delay-1 hover-lift"
+                    style="margin-bottom: 2.5rem;">
+                    <div class="flex flex-col gap-8">
+                        <div>
+                            <h2 class="section-title">About Company</h2>
+                            <p
+                                style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; margin-bottom: 2rem;">
+                                {{ company.company_description or 'No description available for this company.' }}
+                            </p>
+                        </div>
+
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--card-border);">
+                            <div class="flex flex-col">
+                                <span class="text-muted"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Industry</span>
+                                <span style="font-weight: 600;">{{ company.industry or 'Technology' }}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-muted"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Size</span>
+                                <span style="font-weight: 600;">{{ company.size or 'Not specified' }}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-muted"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Founded</span>
+                                <span style="font-weight: 600;">{{ company.year_founded or 'Not specified' }}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-muted"
+                                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Location</span>
+                                <span style="font-weight: 600;">{{ company.location or 'Multiple' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="animate-slide-up animate-delay-2">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="section-title" style="margin-bottom: 0;">Open Internships</h2>
+                        <span class="text-muted" style="font-size: 0.875rem;">{{ jobs|length }} Opportunities
+                            Available</span>
+                    </div>
+
+                    <div class="card" style="padding: 0; overflow: hidden; background: transparent; border: none;">
+                        {% for job in jobs %}
+                        <div class="listing-card animate-slide-up hover-lift"
+                            style="padding: 2.5rem 2rem; border-bottom: 1px solid var(--card-border); gap: 2.5rem; display: flex; align-items: center; background: rgba(255,255,255,0.02); margin-bottom: 1rem; border-radius: var(--radius); border: 1px solid var(--card-border);">
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 1.25rem; font-weight: 700; color: white; margin-bottom: 0.75rem;">
+                                    {{ job.title }}</h3>
+                                <div class="flex items-center gap-6 text-muted" style="font-size: 0.875rem;">
+                                    <span class="flex items-center gap-2"><i data-lucide="map-pin"
+                                            style="width: 16px; opacity: 0.7;"></i> {{ job.location }}</span>
+                                    <span class="flex items-center gap-2"><i data-lucide="calendar"
+                                            style="width: 16px; opacity: 0.7;"></i> {{ job.duration }}</span>
+                                    <span class="flex items-center gap-2"><i data-lucide="briefcase"
+                                            style="width: 16px; opacity: 0.7;"></i> {{ job.mode }}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <a href="{{ url_for('internship_details', job_id=job.id) }}"
+                                    class="btn btn-outline btn-sm" style="padding: 0.6rem 1.2rem;">View Details</a>
+                                {% if can_apply %}
+                                {% if job.id|string in applied_jobs %}
+                                {% set status = applied_jobs[job.id|string] %}
+                                <div class="status-badge status-{{ status }}"
+                                    style="text-transform: capitalize; padding: 0.6rem 1.2rem; min-width: 120px; text-align: center; font-size: 0.8rem; font-weight: 600;">
+                                    {{ status|replace('_', ' ') }}
+                                </div>
+                                {% else %}
+                                <button class="btn btn-primary btn-sm" data-job-id="{{ job.id }}"
+                                    onclick="applyForJob(this.dataset.jobId, this)"
+                                    style="padding: 0.6rem 1.5rem;">Apply Now</button>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div style="padding: 4rem; text-align: center; color: var(--text-muted);">
+                            <i data-lucide="inbox"
+                                style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.3;"></i>
+                            <p>No active internship openings at the moment.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function applyForJob(jobId, btn) {
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'Applying...';
+
+            try {
+                const response = await fetch('/apply-job', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ job_id: jobId })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    btn.closest('.flex').innerHTML = `
+                        <div class="status-badge status-pending" style="text-transform: capitalize; padding: 0.6rem 1.2rem; min-width: 120px; text-align: center; font-size: 0.8rem; font-weight: 600;">
+                            Pending
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    alert('Error: ' + (result.error || 'Could not apply'));
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred. Please try again.');
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Profile link copied to clipboard!');
+        }
+
+        lucide.createIcons();
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+
+</html>

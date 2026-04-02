@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Student Analysis - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD <span
+                    style="font-size: 0.75rem; background: var(--primary-color); color: #FFFFFF; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Biz</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('company_dashboard', section='listings') }}" class="sidebar-link">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </a>
+                <a href="{{ url_for('company_dashboard', section='applications') }}" class="sidebar-link">
+                    <i data-lucide="mail"></i> Applications
+                </a>
+                <a href="{{ url_for('company_dashboard', section='listings') }}" class="sidebar-link">
+                    <i data-lucide="plus-circle"></i> Post Internship
+                </a>
+                <a href="#" class="sidebar-link active">
+                    <i data-lucide="users"></i> Students & Analysis
+                </a>
+                <a href="{{ url_for('company_dashboard', section='profile') }}" class="sidebar-link">
+                    <i data-lucide="building-2"></i> Company Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div>
+                    <h1 style="font-size: 1.5rem; font-weight: 700;">Student Database & Analysis</h1>
+                    <p class="text-muted">Analyze internship trends and student performance.</p>
+                </div>
+            </header>
+
+            <!-- Tabs -->
+            <div class="flex gap-4 mb-6">
+                <button onclick="showTab('list')" id="listTabBtn" class="btn btn-primary">Student List</button>
+                <button onclick="showTab('analysis')" id="analysisTabBtn" class="btn btn-outline">Internship
+                    Analysis</button>
+            </div>
+
+            <!-- Student List Tab -->
+            <section id="listTab">
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead
+                                style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                <tr>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                                        Name</th>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                                        Major / Branch</th>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                                        Skills</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr style="border-bottom: 1px solid var(--card-border);">
+                                    <td style="padding: 1rem;">
+                                        <div style="font-weight: 600; color: white;">{{ student.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ student.email }}
+                                        </div>
+                                    </td>
+                                    <td style="padding: 1rem; color: var(--text-muted);">{{ student.branch or 'N/A' }}
+                                    </td>
+                                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.875rem;">{{
+                                        student.skills or 'N/A' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3"
+                                        style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                                        No students found in the database.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+            </section>
+
+            <!-- Analysis Tab -->
+            <section id="analysisTab" style="display: none;">
+                <div class="stat-grid">
+                    <div class="card stat-card">
+                        <div class="stat-title">Total Students Registered</div>
+                        <div class="stat-value">{{ analysis.total_students }}</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-title">Market Readiness Score</div>
+                        <div class="stat-value">72%</div>
+                    </div>
+                </div>
+
+                <div class="card mt-8">
+                    <h3 class="mb-4" style="color: white; font-weight: 600;">Hiring Trends (Past 6 Months)</h3>
+                    <div id="trendsData" style="display: none;">{{ analysis.hiring_trends|tojson }}</div>
+                    <canvas id="trendsChart" height="100"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            const listTab = document.getElementById('listTab');
+            const analysisTab = document.getElementById('analysisTab');
+            const listBtn = document.getElementById('listTabBtn');
+            const analysisBtn = document.getElementById('analysisTabBtn');
+
+            if (tab === 'list') {
+                listTab.style.display = 'block';
+                analysisTab.style.display = 'none';
+                listBtn.classList.add('btn-primary');
+                listBtn.classList.remove('btn-outline');
+                analysisBtn.classList.add('btn-outline');
+                analysisBtn.classList.remove('btn-primary');
+            } else {
+                listTab.style.display = 'none';
+                analysisTab.style.display = 'block';
+                listBtn.classList.add('btn-outline');
+                listBtn.classList.remove('btn-primary');
+                analysisBtn.classList.add('btn-primary');
+                analysisBtn.classList.remove('btn-outline');
+                initChart();
+            }
+            lucide.createIcons();
+        }
+
+        let chart = null;
+        function initChart() {
+            if (chart) return;
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
+                    datasets: [{
+                        label: 'Internships Secured',
+                        data: JSON.parse(document.getElementById('trendsData').textContent),
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        pointBackgroundColor: '#3b82f6',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: 'rgba(255,255,255,0.5)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Student Signup - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card card animate-slide-up">
+            <div class="text-center mb-4">
+                <a href="{{ url_for('index') }}" class="brand justify-center" style="margin-bottom: 1rem;">
+                    <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                        style="height: 40px; width: 40px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                    <span class="text-primary">Kairva.LD</span>
+                </a>
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">Student Signup</h2>
+                <p class="text-muted mt-2">Start your journey with us today.</p>
+            </div>
+
+            <div id="auth-error" class="error-text mb-4" style="display: none;"></div>
+
+            <div class="desktop-only">
+                <form action="login.html">
+                    <div class="input-group">
+                        <label class="input-label">Full Name</label>
+                        <input type="text" id="fullname" class="input-field" placeholder="John Doe" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" id="email" class="input-field" placeholder="john@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="hidden" id="roleSelect" value="student">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="password" class="input-field" placeholder="Create a password"
+                            required>
+                    </div>
+
+                    <button type="button"
+                        onclick="signUpWithEmail(document.getElementById('email').value, document.getElementById('password').value)"
+                        class="btn btn-primary w-full">Create account</button>
+
+                    <div class="text-center my-3 text-muted">OR</div>
+
+                    <button type="button" onclick="signInWithGoogle()"
+                        class="btn w-full flex items-center justify-center gap-2"
+                        style="background: rgba(255, 255, 255, 0.03); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"
+                            height="18" alt="Google">
+                        Sign up with Google
+                    </button>
+                </form>
+
+                <script>window.firebaseConfig = {{ firebase_config|tojson }};</script>
+                <script type="module" src="{{ url_for('static', filename='js/auth.js') }}"></script>
+            </div>
+
+            <div class="mobile-only text-center py-6">
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i data-lucide="monitor-x" style="color: var(--danger-color);" size="32"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">Mobile Registration Restricted
+                </h3>
+                <p class="text-muted" style="font-size: 0.95rem; line-height: 1.5;">Please use a desktop browser to
+                    register on Kairva.LD and complete your profile.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-outline mt-6 w-full">Back to Home</a>
+            </div>
+
+            <div class="text-center mt-4 text-muted desktop-only" style="font-size: 0.875rem;">
+                Already have an account? <a href="{{ url_for('login') }}" class="text-primary"
+                    style="font-weight: 500;">Log in</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

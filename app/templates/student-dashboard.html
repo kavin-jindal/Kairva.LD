@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ldce_logo.png') }}">
+
+    <title>Student Dashboard - Kairva.LD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 2.5% auto;
+            padding: 2.5rem;
+            border: 1px solid var(--card-border);
+            width: 95%;
+            max-width: 800px;
+            border-radius: var(--radius);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/ldce_logo.png') }}" alt="LDCE Logo"
+                    style="height: 32px; width: 32px; object-fit: contain; margin-right: 0.75rem; border-radius: 50%;">
+                Kairva.LD
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('student_dashboard', section='overview') }}"
+                    class="sidebar-link {% if active_section == 'overview' %}active{% endif %}">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
+                <a href="{{ url_for('explore_companies') }}" class="sidebar-link">
+                    <i data-lucide="search"></i> Explore Companies
+                </a>
+                <a href="{{ url_for('placement_records') }}" class="sidebar-link">
+                    <i data-lucide="trending-up"></i> Placement Records
+                </a>
+                <a href="#" class="sidebar-link" onclick="showSection('applications')">
+                    <i data-lucide="briefcase"></i> My Applications
+                </a>
+                <a href="#" class="sidebar-link" onclick="showSection('notifications')">
+                    <i data-lucide="bell"></i> Notifications
+                    {% if unread_count is defined and unread_count > 0 %}
+                    <span class="badge"
+                        style="background:var(--danger-color); color:white; padding:2px 6px; border-radius:10px; font-size:0.7rem; margin-left:auto;">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('profile') }}" class="sidebar-link">
+                    <i data-lucide="user"></i> Profile
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="javascript:void(0)" onclick="logout()" class="sidebar-link"
+                    style="color: var(--danger-color);">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <header class="dashboard-header">
+                <div class="flex items-center justify-between" style="width: 100%;">
+                    <div class="flex items-center">
+                        <button class="nav-menu-btn" onclick="toggleSidebar()"
+                            style="color: var(--text-main); margin-right: 1rem;">
+                            <i data-lucide="menu"></i>
+                        </button>
+                        <div>
+                            <h1 style="font-size: 1.5rem; font-weight: 700;">Dashboard Overview</h1>
+                            <p class="text-muted">Welcome back, {{ user.name }}!</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4" style="flex-shrink: 0;">
+                        {% if not profile_completed %}
+                        <a href="{{ url_for('complete_profile') }}" class="btn btn-primary btn-sm hover-lift"
+                            style="box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
+                            <i data-lucide="alert-triangle" style="width: 14px; height: 14px; margin-right: 4px;"></i>
+                            Complete Profile
+                        </a>
+                        {% endif %}
+
+                        <!-- Notification Bell -->
+                        <div class="notification-wrapper" style="position: relative;">
+                            <button onclick="toggleNotifications()" class="btn btn-outline btn-sm"
+                                style="border: none; padding: 0.5rem; position: relative; background: rgba(255, 255, 255, 0.03);">
+                                <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+                                <span id="notif-badge"
+                                    style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--danger-color); border-radius: 50%; display: none;"></span>
+                            </button>
+
+                            <div id="notif-dropdown" class="card"
+                                style="position: absolute; top: 100%; right: 0; width: 320px; padding: 0; z-index: 100; display: none; box-shadow: var(--shadow-lg); max-height: 400px; overflow-y: auto;">
+                                <div
+                                    style="padding: 1rem; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; background: #121212; position: sticky; top: 0;">
+                                    <h3 style="font-size: 0.9rem; font-weight: 600; margin: 0;">Notifications</h3>
+                                    <button onclick="markAllRead()"
+                                        style="font-size: 0.75rem; color: var(--primary-color); background: none; border: none; cursor: pointer; font-weight: 600;">Mark
+                                        all read</button>
+                                </div>
+                                <div id="notif-list">
+                                    <!-- Populated via JS -->
+                                    <div
+                                        style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                        No new notifications
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('profile') }}"
+                            style="width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFFFFF; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.1); text-decoration: none; flex-shrink: 0;">
+                            {% if user.profile_pic %}
+                            <img src="{{ resolve_url(user.profile_pic) }}" alt="Profile"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            {{ user.name[0]|upper }}
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div id="section-overview">
+                <!-- Internship Listings -->
+                <section>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="section-title">New Internships Listed</h2>
+                    </div>
+
+                    <div class="card mb-8" style="padding: 0;">
+                        {% set unapplied_jobs = [] %}
+                        {% for job in jobs %}
+                        {% if job.id|int not in applied_job_ids %}
+                        {% set _ = unapplied_jobs.append(job) %}
+                        <div class="listing-card">
+                            <div class="company-logo"
+                                style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                {{ job.company_name[0] | upper }}
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main);">{{ job.title }}
+                                </h3>
+                                <p class="text-muted" style="font-size: 0.875rem;">{{ job.company_name }} • {{
+                                    job.location }}</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="status-badge status-active">{{ job.mode }}</div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ url_for('internship_details', job_id=job.id) }}"
+                                        class="btn btn-outline btn-sm">View</a>
+                                    <button data-job-id="{{ job.id }}" onclick="applyForInternship(this.dataset.jobId)"
+                                        class="btn btn-primary btn-sm">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if not unapplied_jobs %}
+                        <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                            <i data-lucide="check-circle"
+                                style="width: 40px; height: 40px; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <p>You're all caught up! No new recommendations at the moment.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="section-title">My Applied Internships</h2>
+                    </div>
+
+                    <div class="card" style="padding: 0;">
+                        {% set applied_jobs = [] %}
+                        {% for job in jobs %}
+                        {% if job.id|int in applied_job_ids %}
+                        {% set _ = applied_jobs.append(job) %}
+                        <div class="listing-card">
+                            <div class="company-logo"
+                                style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                {{ job.company_name[0] | upper }}
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main);">{{ job.title }}
+                                </h3>
+                                <p class="text-muted" style="font-size: 0.875rem;">{{ job.company_name }} • {{
+                                    job.location }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                {% set ns = namespace(app_status='pending', app_id='') %}
+                                {% for app in applications %}
+                                {% if app.job_id|int == job.id|int %}
+                                {% set ns.app_status = app.status %}
+                                {% set ns.app_id = app.id %}
+                                {% endif %}
+                                {% endfor %}
+
+                                <div class="status-badge status-{{ ns.app_status }}">{{ ns.app_status|replace('_', '
+                                    ')|title
+                                    }}</div>
+                                <a href="{{ url_for('internship_details', job_id=job.id) }}"
+                                    class="btn btn-outline btn-sm">View</a>
+
+                                {% if ns.app_status == 'pending' %}
+                                <button onclick="withdrawApplication('{{ ns.app_id }}')" class="btn btn-outline btn-sm"
+                                    style="border-color: var(--danger-color); color: var(--danger-color);">
+                                    Withdraw
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if not applied_jobs %}
+                        <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                            <p>You haven't applied to any internships yet.</p>
+                            <a href="#" class="text-primary mt-2 inline-block">Explore opportunities</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+
+            <div id="section-applications" style="display: none;">
+                <h2 class="section-title">My Applications</h2>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead
+                                style="background-color: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--card-border);">
+                                <tr>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                                        Role</th>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                                        Status</th>
+                                    <th
+                                        style="text-align: left; padding: 1rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 600;">
+                                        Applied On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in applications %}
+                                <tr style="border-bottom: 1px solid var(--card-border);">
+                                    <td style="padding: 1rem;">
+                                        <div style="font-weight: 600; color: var(--text-main);">{{ app.job_info.title }}
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ app.company_name
+                                            }}
+                                        </div>
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        <span class="status-badge status-{{ app.status }}"
+                                            style="text-transform: capitalize;">
+                                            {{ app.status|replace('_', ' ') }}
+                                        </span>
+                                        <button class="btn btn-outline btn-sm view-job-btn"
+                                            data-job="{{ app.job_info|tojson|forceescape }}"
+                                            data-company="{{ app.company_name }}"
+                                            style="margin-left: 0.5rem; padding: 2px 6px; font-size: 0.7rem;">
+                                            View
+                                        </button>
+                                        {% if app.status == 'pending' %}
+                                        <button onclick="withdrawApplication('{{ app.id }}')"
+                                            class="btn btn-outline btn-sm"
+                                            style="margin-left: 0.5rem; padding: 2px 6px; font-size: 0.7rem; border-color: var(--danger-color); color: var(--danger-color);">
+                                            Withdraw
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                    <td style="padding: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                                        {{ app.applied_at }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3"
+                                        style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                                        You haven't applied for any internships yet.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-notifications" style="display: none;">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="section-title">Notifications</h2>
+                    <button onclick="markAllRead()" class="btn btn-outline btn-sm">Mark All as Read</button>
+                </div>
+
+                <div class="card" style="padding: 0;">
+                    <div id="full-notif-list">
+                        <!-- Populated by JS -->
+                        <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                            Loading notifications...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Internship Details Modal -->
+    <div id="jobModal" class="modal"
+        style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+        <div class="modal-content animate-slide-up">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 id="modalJobTitle" style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">-</h2>
+                    <p id="modalCompany" class="text-primary" style="font-weight: 500;">-</p>
+                </div>
+                <button onclick="closeModal()" class="btn btn-outline btn-sm" style="padding: 4px 8px;">✕</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div>
+                    <div class="text-muted text-xs uppercase tracking-wider mb-1">Location</div>
+                    <div id="modalLocation" class="text-main">-</div>
+                </div>
+                <div>
+                    <div class="text-muted text-xs uppercase tracking-wider mb-1">Type</div>
+                    <div id="modalType" class="text-main">-</div>
+                </div>
+                <div>
+                    <div class="text-muted text-xs uppercase tracking-wider mb-1">Stipend</div>
+                    <div id="modalStipend" class="text-main">-</div>
+                </div>
+                <div>
+                    <div class="text-muted text-xs uppercase tracking-wider mb-1">Mode</div>
+                    <div id="modalMode" class="text-main">-</div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="text-muted text-xs uppercase tracking-wider mb-2">Description</div>
+                <p id="modalDescription" class="text-main" style="line-height: 1.6; white-space: pre-wrap;">-</p>
+            </div>
+
+            <div>
+                <div class="text-muted text-xs uppercase tracking-wider mb-2">Skills Required</div>
+                <div id="modalSkills" class="text-main" style="line-height: 1.6;">
+                    <!-- Populated JS -->
+                </div>
+            </div>
+            <input type="hidden" id="applyJobId">
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        function showSection(section) {
+            document.getElementById('section-overview').style.display = section === 'overview' ? 'block' : 'none';
+            document.getElementById('section-applications').style.display = section === 'applications' ? 'block' : 'none';
+            document.getElementById('section-notifications').style.display = section === 'notifications' ? 'block' : 'none';
+
+            // Update active state in sidebar
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            if (section === 'overview') {
+                document.querySelector('a[href*="section=overview"]')?.classList.add('active'); // Fallback if regular link
+            } else if (section === 'applications') {
+                document.querySelector('a[onclick="showSection(\'applications\')"]')?.classList.add('active');
+            } else if (section === 'notifications') {
+                document.querySelector('a[onclick="showSection(\'notifications\')"]')?.classList.add('active');
+            }
+        }
+
+        // Initialize view based on active_section from server
+        window.addEventListener('load', () => {
+            // Handle section param or default
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section') || 'overview';
+            showSection(section);
+        });
+
+        // Internship Modal Logic
+        function viewInternshipDetails(job, companyName) {
+            document.getElementById('modalJobTitle').innerText = job.title;
+            document.getElementById('modalCompany').innerText = companyName;
+            document.getElementById('modalLocation').innerText = job.location;
+            document.getElementById('modalType').innerText = job.duration || 'Not set';
+            document.getElementById('modalStipend').innerText = job.stipend && job.stipend !== '0' ? '₹' + job.stipend + ' / month' : 'Unpaid';
+            document.getElementById('modalMode').innerText = job.mode;
+            document.getElementById('modalSkills').innerText = job.skills_required || 'None listed';
+            document.getElementById('modalDescription').innerText = job.description;
+
+            document.getElementById('applyJobId').value = job.id;
+            document.getElementById('jobModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('jobModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        // Attach event listeners to view buttons
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.view-job-btn');
+            if (btn) {
+                const job = JSON.parse(btn.getAttribute('data-job'));
+                const company = btn.getAttribute('data-company');
+                viewInternshipDetails(job, company);
+            }
+        });
+        async function withdrawApplication(appId) {
+            if (!confirm('Are you sure you want to withdraw this application?')) return;
+
+            try {
+                const response = await fetch('/withdraw-application', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ app_id: appId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to withdraw: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred');
+            }
+        }
+
+        async function applyForInternship(jobId) {
+            if (!confirm('Are you sure you want to apply for this internship?')) return;
+
+            // Find the button and show loading state
+            const btn = document.querySelector(`button[data-job-id="${jobId}"]`);
+            const originalText = btn.innerText;
+            btn.innerText = 'Applying...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/apply-job', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ job_id: jobId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Application submitted successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to apply: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred. Please try again.');
+            } finally {
+                // Restore button state if not reloaded
+                if (btn) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        lucide.createIcons();
+
+        // Notifications Logic
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/api/notifications');
+                const notifications = await response.json();
+                renderNotifications(notifications);
+            } catch (e) {
+                console.error("Failed to fetch notifications", e);
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const list = document.getElementById('notif-list');
+            const fullList = document.getElementById('full-notif-list');
+            const badge = document.getElementById('notif-badge');
+
+            const html = notifications.length > 0 ? notifications.map(n => `
+                    <div class="notification-item" onclick="handleNotificationClick('${n.id}', '${n.link}')" 
+                        style="padding: 1rem; border-bottom: 1px solid var(--card-border); cursor: pointer; transition: background 0.2s; display:flex; gap:1rem; align-items:start;">
+                    <div style="background:rgba(59, 130, 246, 0.1); padding:8px; border-radius:50%; color:var(--primary-color);">
+                            <i data-lucide="bell" style="width:16px; height:16px;"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.9rem; margin-bottom: 0.25rem; line-height: 1.4;">${n.message}</p>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(n.created_at + 'Z').toLocaleString()}</span>
+                        </div>
+                    </div>
+                `).join('') : '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">No new notifications</div>';
+
+            if (list) list.innerHTML = html;
+            if (fullList) fullList.innerHTML = html;
+
+            if (notifications.length > 0) {
+                if (badge) badge.style.display = 'block';
+                if (badge) badge.innerText = notifications.length;
+
+                // Add hover effects
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.addEventListener('mouseenter', () => item.style.background = 'rgba(255, 255, 255, 0.02)');
+                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                });
+            } else {
+                if (badge) badge.style.display = 'none';
+            }
+
+            lucide.createIcons();
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notif-dropdown');
+            const isHidden = dropdown.style.display === 'none';
+            dropdown.style.display = isHidden ? 'block' : 'none';
+
+            if (isHidden) {
+                // creating logic to close when clicking outside
+                document.addEventListener('click', closeDropdownOutside);
+            }
+        }
+
+        function closeDropdownOutside(e) {
+            if (!e.target.closest('.notification-wrapper')) {
+                document.getElementById('notif-dropdown').style.display = 'none';
+                document.removeEventListener('click', closeDropdownOutside);
+            }
+        }
+
+        async function handleNotificationClick(id, link) {
+            // Mark as read then navigate
+            try {
+                await fetch(`/api/notifications/mark-read/${id}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+                });
+                if (link && link !== 'null') {
+                    window.location.href = link;
+                } else {
+                    fetchNotifications(); // Refresh list
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function markAllRead() {
+            try {
+                await fetch(`/api/notifications/mark-all-read`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+                });
+                fetchNotifications();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Poll for notifications every 30 seconds
+        fetchNotifications();
+        setInterval(fetchNotifications, 30000);
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+
+</html>
